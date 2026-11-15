@@ -1,0 +1,13 @@
+{
+ "versao": 1,
+ "grupos": {
+  "melhoria": "Pedidos de melhoria e serviços",
+  "cobranca": "Perguntas e cobranças (pedidos de informação)",
+  "homenagem": "Homenagens (parabéns, pesar, título, nome de rua, data comemorativa)",
+  "lei": "Propostas de lei e de decreto",
+  "saude_individual": "Encaminhamento de caso individual de saúde",
+  "posicionamento": "Moções, registros e manifestações (apoio, repúdio, matérias registradas)",
+  "tramite": "Trâmites internos (atas, emendas, licenças)",
+  "outros": "Outros"
+ }
+}
