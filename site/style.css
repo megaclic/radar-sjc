@@ -208,3 +208,4 @@ ol.cards{counter-reset:none}
 .cmp .cmph{font-weight:800;border-bottom:2px solid var(--tx)}.cmp .cmph:first-child{display:none}
 .cmp .cmpl{grid-column:1/-1;color:var(--mu);font-size:.85rem;border-bottom:0;padding-bottom:0;padding-top:12px}
 @media(min-width:640px){.cmpsel{grid-template-columns:1fr 1fr}.cmp{grid-template-columns:1.2fr 1fr 1fr}.cmp .cmph:first-child{display:block}.cmp .cmpl{grid-column:auto;color:var(--tx);font-size:1rem;padding-top:8px;border-bottom:1px solid var(--li)}}
+.topo nav{flex-wrap:wrap;gap:0 14px}.topo nav a{white-space:nowrap}
