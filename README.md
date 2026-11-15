@@ -6,9 +6,8 @@ Mostra, só com dados oficiais da Câmara Municipal de São José dos Campos, o 
 - `coletor/classificar.py`: regra única que separa as propostas em grupos (versão 1).
 - `coletor/gerar_site.py`: gera `site/data/*.json`.
 - `site/`: site estático (HTML, CSS e JS puros), publicado no GitHub Pages.
-- `.github/workflows/publicar.yml`: publica `site/` no GitHub Pages a cada envio.
-- `atualizar_e_publicar.bat`: coleta, gera e envia (rodar todo dia no PC, pois o site da Câmara não responde aos servidores do GitHub).
+- `.github/workflows/atualizar.yml`: robô diário.
 
-Rodar localmente: `python coletor/atualizar.py` e `python coletor/gerar_site.py`. Para ver o site, dê dois cliques em `servir.bat` e abra http://localhost:8000 (abrir o index.html direto não funciona, o navegador bloqueia a leitura dos dados).
+Rodar localmente: `python3 coletor/atualizar.py && python3 coletor/gerar_site.py`, depois servir a pasta `site/` (por exemplo `python3 -m http.server -d site`).
 Variáveis: `RADAR_LEGISLATURA` (19), `RADAR_ANO_INICIO` (2025), `RADAR_PAUSA`, `RADAR_CONTATO`.
 Primeira carga de proposições: `coletor/proposicoes.py` e `coletor/consolidar_proposicoes.py`.

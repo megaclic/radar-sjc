@@ -3,14 +3,15 @@ Mesma regra para todos os vereadores. Baseada so no TIPO e no inicio do ASSUNTO.
 Versao da regra: 1. Uso: python3 coletor/classificar.py  (mostra contagens e sobras)"""
 import json, re, sys, unicodedata, collections
 from pathlib import Path
+from enriquecer import caso_individual_escolar
 
-VERSAO = 1
+VERSAO = 2
 GRUPOS = {
     "melhoria": "Pedidos de melhoria e serviços",
     "cobranca": "Perguntas e cobranças (pedidos de informação)",
     "homenagem": "Homenagens (parabéns, pesar, título, nome de rua, data comemorativa)",
     "lei": "Propostas de lei e de decreto",
-    "saude_individual": "Encaminhamento de caso individual de saúde",
+    "saude_individual": "Casos individuais (consulta, exame ou vaga escolar de uma pessoa)",
     "posicionamento": "Moções, registros e manifestações (apoio, repúdio, matérias registradas)",
     "tramite": "Trâmites internos (atas, emendas, licenças)",
     "outros": "Outros",
@@ -39,7 +40,7 @@ def grupo(tipo, assunto):
             return "homenagem"
         return "lei"
     if t.startswith("requerimento"):
-        if R_SAUDE.search(a): return "saude_individual"
+        if R_SAUDE.search(a) or caso_individual_escolar(a): return "saude_individual"
         if R_HOMENAGEM.search(a): return "homenagem"
         if R_INTERNO.search(a[:80]): return "tramite"
         if re.match(r"^registra\b", a): return "posicionamento"
@@ -48,6 +49,7 @@ def grupo(tipo, assunto):
             return "melhoria"
         return "outros"
     if t.startswith("indicacao"):
+        if caso_individual_escolar(a): return "saude_individual"
         return "cobranca" if R_INFO.search(a[:200]) else "melhoria"
     return "outros"
 

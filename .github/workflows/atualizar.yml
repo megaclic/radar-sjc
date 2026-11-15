@@ -1,0 +1,43 @@
+name: Atualizar e publicar
+on:
+  schedule:
+    - cron: "17 8 * * *"   # todo dia, 05:17 em Brasília
+  workflow_dispatch:
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: false
+jobs:
+  atualizar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: sudo apt-get update && sudo apt-get install -y poppler-utils
+      - name: Coletar (aborta sem publicar se algo estiver incompleto)
+        run: python3 coletor/atualizar.py
+      - name: Gerar dados do site
+        run: python3 coletor/gerar_site.py
+      - name: Guardar dados novos no repositório
+        run: |
+          git config user.name "robo-radar"
+          git config user.email "robo-radar@users.noreply.github.com"
+          git add data site/data
+          git diff --cached --quiet || git commit -m "Dados atualizados em $(date -u +%F)"
+          git push
+      - uses: actions/upload-pages-artifact@v3
+        with: { path: site }
+  publicar:
+    needs: atualizar
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.d.outputs.page_url }}
+    steps:
+      - id: d
+        uses: actions/deploy-pages@v4

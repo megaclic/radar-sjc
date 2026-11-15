@@ -1,6 +1,8 @@
 """Gera os JSONs do site (site/data) a partir de data/. Sem inventar nada: so reorganiza o que foi coletado."""
-import json, collections, re
+import json, collections, re, sys, unicodedata
 from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import enriquecer as E
 RAIZ = Path(__file__).resolve().parent.parent
 D, S = RAIZ / "data", RAIZ / "site" / "data"
 (S / "v").mkdir(parents=True, exist_ok=True)
@@ -38,7 +40,8 @@ for p in props:
     reg = [p["id"], p["sigla"], p["numero"], p["ano"], d, p["grupo"], p["assunto"], p["situacao"], p["arquivo"], p["autores"]]
     for a in p["autores"]: prop_v[a].append(reg)
     if p["grupo"] != "saude_individual":
-        busca.append([p["id"], f'{p["sigla"]} {p["numero"]}/{p["ano"]}', d, p["grupo"], p["assunto"], p["arquivo"], p["autores"]])
+        tm, ba, ru = (E.tema(p["assunto"]), E.bairro(p["assunto"]), E.rua(p["assunto"])) if p["grupo"] in ("melhoria", "cobranca") else ("", "", "")
+        busca.append([p["id"], f'{p["sigla"]} {p["numero"]}/{p["ano"]}', d, p["grupo"], p["assunto"], p["arquivo"], p["autores"], tm, ba, ru])
 
 resumo = []
 for v in ver:
@@ -58,8 +61,27 @@ for v in ver:
     pl = [r if r[5] != "saude_individual" else r[:6] + ["", r[7], r[8], r[9]] for r in pl]
     W(S / "v" / f"{i}.json", {"presenca": pr, "proposicoes": pl, "votos": vv})
 resumo.sort(key=lambda r: r["nome"])
+# agregados da cidade (so pedidos de melhoria: tem local e tema)
+mel = [b for b in busca if b[3] == "melhoria"]
+sn = lambda x: "".join(c for c in unicodedata.normalize("NFD", x) if unicodedata.category(c) != "Mn").casefold()
+temas = collections.Counter(b[7] for b in mel)
+bairros = collections.Counter(b[8] for b in busca if b[8])
+rec = collections.defaultdict(list)
+for b in mel:
+    if b[9]: rec[(sn(b[9]), b[7])].append(b)
+recorrentes = []
+for (_, tm), L in rec.items():
+    if len(L) < 5: continue
+    ru = collections.Counter(b[9] for b in L).most_common(1)[0][0]
+    ba = collections.Counter(b[8] for b in L if b[8]).most_common(1)[0][0] if any(b[8] for b in L) else ""
+    ds = sorted(b[2] for b in L)
+    recorrentes.append({"rua": ru, "bairro": ba, "tema": tm, "vezes": len(L), "vereadores": len({a for b in L for a in b[6]}), "de": ds[0], "ate": ds[-1]})
+recorrentes.sort(key=lambda r: -r["vezes"])
+W(S / "bairros.json", [[n, c] for n, c in bairros.most_common() if c >= 3])
+agreg = {"temas": dict(temas.most_common()), "bairros_top": bairros.most_common(5), "recorrentes": recorrentes[:60], "n_recorrentes": len(recorrentes),
+         "grupos_total": dict(collections.Counter(p["grupo"] for p in props if p["grupo"] != "tramite")), "n_propostas": sum(1 for p in props if p["grupo"] != "tramite")}
 W(S / "resumo.json", {"vereadores": resumo, "grupos": grupos["grupos"], "estado": estado,
                       "sessoes_total": len(sess), "sessoes_sem_lista": len(sem_lista), "votacoes_em_verificacao": em_verificacao,
-                      "votacoes_total": len(vot), "votacoes_secretas": sum(1 for v in vot if v["conferencia"] == "secreta_sem_voto_nominal")})
+                      "agreg": agreg, "votacoes_total": len(vot), "votacoes_secretas": sum(1 for v in vot if v["conferencia"] == "secreta_sem_voto_nominal")})
 W(S / "busca.json", busca)
 print("site/data gerado:", len(resumo), "vereadores,", len(busca), "itens na busca,", em_verificacao, "votacoes em verificacao")
