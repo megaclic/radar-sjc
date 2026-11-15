@@ -235,3 +235,4 @@ a.cracha:active{transform:scale(.98)}
 @media(max-width:420px){.lista a{grid-template-columns:auto 40px 1fr;}.lista .vl{grid-column:3;text-align:left;font-size:.95rem}.lista img{width:40px;height:40px}}
 .gabl{display:flex;justify-content:space-between;gap:10px;align-items:center;min-height:44px;padding:8px 12px;border-radius:12px;background:var(--bg-secondary,#f2f2f7);color:var(--tx);text-decoration:none;font-size:.9rem}
 .gabl b{white-space:nowrap}
+@media(max-width:639px){.topo{position:static}}
