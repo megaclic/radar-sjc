@@ -4,6 +4,7 @@ rem Se a coleta falhar, nada e enviado. Pode ser agendado no Agendador de Tarefa
 cd /d "%~dp0"
 python coletor\atualizar.py || (echo Coleta incompleta. Nada foi publicado. & exit /b 1)
 python coletor\gerar_site.py || exit /b 1
+python coletor\gastos.py || (echo Gastos nao atualizados, o restante segue. )
 git add data site
 git diff --cached --quiet && (echo Sem novidades. & exit /b 0)
 git commit -m "Dados atualizados em %date%"
