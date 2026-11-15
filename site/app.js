@@ -5,7 +5,7 @@ const norm=s=>(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
 const cache={};const get=async u=>cache[u]??(cache[u]=await (await fetch(u)).json());
 let R;
 const PAGE=50;
-async function init(){R=await get('data/resumo.json');
+async function init(){try{R=await get('data/resumo.json');}catch(e){app.innerHTML='<h1>Não foi possível carregar os dados</h1><p>Se você abriu o arquivo direto da pasta (endereço começando com file://), o navegador bloqueia a leitura dos dados. Abra pelo servidor local: dê dois cliques em <b>servir.bat</b> (na pasta do projeto) e acesse <b>http://localhost:8000</b>. Online, no GitHub Pages, isso não acontece.</p>';return;}
  $('#atualizado').textContent='Dados atualizados até '+R.estado.camara_ultima_atualizacao+' (coletados em '+fd(R.estado.atualizado_em.slice(0,10))+'). Legislatura atual: desde 01/01/2025.';
  window.addEventListener('hashchange',rota);rota();}
 function rota(){const h=location.hash.replace(/^#\/?/,'').split('/');window.scrollTo(0,0);
