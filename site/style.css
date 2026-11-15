@@ -156,3 +156,11 @@ input[type=search]:focus,select:focus{box-shadow:0 0 0 4px rgba(0,122,255,.3);bo
  .tag{color:#64a8ff}.tag.t2{color:#ff6b86}
 }
 @media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+
+/* ---- v5.1: correção de contraste (WCAG 1.4.3, mínimo 4.5:1 em texto pequeno) ---- */
+:root{--label-secondary:#5c5c61;--btn:#0062cc;--red-txt:#d70015}
+.btn,.abas a.on,.chip:hover,.chip.on,#topo-btn{background:var(--btn)}
+.btn.cl{background:rgba(0,98,204,.1);color:var(--btn)}
+.recc .n,.recc span:last-child{color:var(--red-txt)}
+.tile.vd b{color:#1f7a35}
+@media(prefers-color-scheme:dark){:root{--label-secondary:rgba(235,235,245,.6);--red-txt:#ff6961}.btn.cl{background:rgba(10,132,255,.18);color:#64a8ff}}
