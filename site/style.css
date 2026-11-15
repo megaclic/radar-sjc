@@ -164,3 +164,22 @@ input[type=search]:focus,select:focus{box-shadow:0 0 0 4px rgba(0,122,255,.3);bo
 .recc .n,.recc span:last-child{color:var(--red-txt)}
 .tile.vd b{color:#1f7a35}
 @media(prefers-color-scheme:dark){:root{--label-secondary:rgba(235,235,245,.6);--red-txt:#ff6961}.btn.cl{background:rgba(10,132,255,.18);color:#64a8ff}}
+
+/* v6 gastos: cartoes e KPIs que cabem no celular */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin:14px 0}
+.kpis .tile{min-width:0;cursor:default}
+.kpis .tile b{font-size:1.5rem;white-space:nowrap}
+.kpis .tile span{display:block;margin-top:4px;line-height:1.35;overflow-wrap:anywhere}
+.cards{display:grid;gap:10px;margin:12px 0;padding:0;list-style:none}
+.cd{display:block;border:1px solid var(--li);border-radius:12px;padding:12px 14px;background:var(--bg);color:inherit;text-decoration:none;min-width:0;overflow-wrap:anywhere}
+a.cd{min-height:44px}a.cd:hover{border-color:var(--az)}
+a.cd::after{content:none}
+.cd h3{margin:0 0 2px;font-size:1.05rem}
+.cd .sub{color:var(--mu);font-size:.85rem;margin:0 0 6px}
+.cd .hist{font-size:.9rem;margin:0 0 8px}
+.cd dl{display:grid;grid-template-columns:1fr auto;gap:4px 12px;margin:0}
+.cd dt{color:var(--mu);font-size:.9rem}
+.cd dd{margin:0;text-align:right;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.cd small{font-size:.8rem}
+.sortb{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 4px}
+@media(min-width:720px){.cards{grid-template-columns:repeat(2,1fr)}}

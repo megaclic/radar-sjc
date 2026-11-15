@@ -162,28 +162,37 @@ new MutationObserver(()=>avisoNovaAba()).observe(document.body,{childList:true,s
 /* ---------- GASTOS ---------- */
 const PORTAL='https://portal.camarasjc.sp.gov.br/portal-transparencia/execucao/despesas-detalhadas';
 const rs=x=>'R$ '+brl(x||0);
+const mi=x=>x>=1e6?'R$ '+(x/1e6).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+' mi':'R$ '+Math.round(x||0).toLocaleString('pt-BR');
 const somaFolha=(f,fn)=>Object.entries(f||{}).filter(([c])=>fn(c)).reduce((t,[,x])=>t+x[0],0);
 const catTot=(v)=>{const o={};Object.values(v.cats||{}).forEach(a=>Object.entries(a).forEach(([c,x])=>{o[c]=o[c]||[0,0];o[c][0]+=x[0];o[c][1]+=x[1]}));return o};
 const lk=t=>`<a href="${PORTAL}" target="_blank" rel="noopener">${t}</a>`;
+const kpi=(x,t)=>`<div class="tile"><b>${mi(x)}</b><span>${t}<br>${rs(x)}</span></div>`;
 function pGas(v){get('data/gastos.json').then(G=>{if(CV!==v.id)return;const g=G.vereadores.find(x=>x.id===v.id);
  if(!g){$('#aba').innerHTML='<p>Sem dados de gastos para este vereador.</p>';return}
  const cs=G.competencias,n25=cs.filter(c=>c.endsWith('2025')).length,n26=cs.filter(c=>c.endsWith('2026')).length,ult=cs[cs.length-1],pes=(g.folha[ult]||[0,0])[1];
  const f25=somaFolha(g.folha,c=>c.endsWith('2025')),f26=somaFolha(g.folha,c=>c.endsWith('2026')),ct=catTot(g),cats=Object.entries(ct).sort((a,b)=>b[1][0]-a[1][0]),emp=cats.reduce((t,[,x])=>t+x[0],0);
- $('#aba').innerHTML=`<p>Gastos ligados a este vereador no Portal da Transparência da Câmara. Dados de ${G.anos.join(' e ')}.</p>
-<h2>Equipe do gabinete</h2><div class="tiles"><div class="tile"><b>${rs(f25)}</b><span>salário bruto da equipe em 2025 (${n25} meses)</span></div><div class="tile"><b>${rs(f26)}</b><span>salário bruto da equipe em 2026 (${n26} meses, até ${ult})</span></div><div class="tile"><b>${nf(pes)}</b><span>pessoas lotadas em ${ult}</span></div></div>
-<p class="peq">Soma do salário bruto de todos os servidores lotados no gabinete. Estagiários não aparecem com lotação no portal e ficam de fora. ${lk('Fonte: Remuneração, no portal')}.</p>
-<h2>Outros gastos do gabinete</h2>${cats.length?`<p><b>${rs(emp)}</b> empenhados em ${G.anos.join(' e ')}. Empenhado é o valor reservado para pagar; o valor pago aparece ao lado.</p><table><tr><th>Tipo</th><th>Empenhado</th><th>Pago</th></tr>${cats.map(([c,x])=>`<tr><td>${esc(c)}</td><td>${rs(x[0])}</td><td>${rs(x[1])}</td></tr>`).join('')}</table>
-<details><summary><b>Ver um por um (${nf(g.itens.length)})</b></summary><table><tr><th>Data</th><th>Empenho</th><th>Fornecedor</th><th>O que foi</th><th>Empenhado</th><th>Pago</th></tr>${g.itens.map(i=>`<tr><td>${fd(i.d)}</td><td>${esc(i.doc)}</td><td>${esc(i.cred)}</td><td><b>${esc(i.cat)}</b><br>${esc(i.h)}</td><td>${rs(i.emp)}</td><td>${rs(i.pago)}</td></tr>`).join('')}</table></details>`:'<p>O portal não mostra nenhum gasto ligado ao centro de custo deste vereador nesse período.</p>'}
+ $('#aba').innerHTML=`<p>Gastos ligados a este vereador no Portal da Transparência da Câmara, em ${G.anos.join(' e ')}.</p>
+<h2>Equipe do gabinete</h2><div class="kpis">${kpi(f25,'equipe em 2025 ('+n25+' meses)')}${kpi(f26,'equipe em 2026 ('+n26+' meses, até '+ult+')')}</div>
+<p>${nf(pes)} pessoas lotadas no gabinete em ${ult}. Soma do salário bruto de quem está lotado ali. Estagiários não aparecem com lotação no portal e ficam de fora. ${lk('Fonte: Remuneração, no portal')}.</p>
+<h2>Outros gastos do gabinete</h2>${cats.length?`<div class="kpis">${kpi(emp,'empenhado em '+G.anos.join(' e '))}</div><p class="peq">Empenhado é o valor reservado para pagar. O valor pago aparece ao lado de cada tipo.</p>
+<div class="cd"><dl>${cats.map(([c,x])=>`<dt>${esc(c)}<br><small>pago ${rs(x[1])}</small></dt><dd>${rs(x[0])}</dd>`).join('')}</dl></div>
+<details><summary><b>Ver um por um (${nf(g.itens.length)})</b></summary><ul class="cards">${g.itens.map(i=>`<li class="cd"><h3>${esc(i.cat)}</h3><p class="sub">${fd(i.d)} · ${esc(i.doc)} · ${esc(i.cred)}</p><p class="hist">${esc(i.h)}</p><dl><dt>Empenhado</dt><dd>${rs(i.emp)}</dd><dt>Pago</dt><dd>${rs(i.pago)}</dd></dl></li>`).join('')}</ul></details>`:'<p>O portal não mostra nenhum gasto ligado ao centro de custo deste vereador nesse período.</p>'}
 <p class="peq">Só aparece o que o portal liga ao centro de custo do vereador. ${lk('Fonte: Despesas Detalhadas, no portal')} (procure pelo número do empenho). Atualizado em ${fd(G.gerado_em.slice(0,10))}.</p>`})}
 function gastosGeral(){app.innerHTML='<h1>Gastos da Câmara</h1><p>Carregando…</p>';get('data/gastos.json').then(G=>{
  const cs=G.competencias,n26=cs.filter(c=>c.endsWith('2026')).length,ult=cs[cs.length-1];
- const L=G.vereadores.map(g=>({g,f25:somaFolha(g.folha,c=>c.endsWith('2025')),f26:somaFolha(g.folha,c=>c.endsWith('2026')),e:Object.values(catTot(g)).reduce((t,x)=>t+x[0],0)})).sort((a,b)=>(b.f25+b.f26)-(a.f25+a.f26));
- const an=Object.entries(G.geral.anos),pub=G.publicidade;
+ const L=G.vereadores.map(g=>({g,f25:somaFolha(g.folha,c=>c.endsWith('2025')),f26:somaFolha(g.folha,c=>c.endsWith('2026')),e:Object.values(catTot(g)).reduce((t,x)=>t+x[0],0)}));
+ const an=Object.entries(G.geral.anos);
+ const grp={};G.publicidade.forEach(p=>{const k=p.credor+'|'+p.contrato+'|'+p.subelemento;(grp[k]=grp[k]||{p,anos:[]}).anos.push(p)});
+ const pubs=Object.values(grp).sort((a,b)=>b.anos.reduce((t,x)=>t+x.empenhado,0)-a.anos.reduce((t,x)=>t+x.empenhado,0));
+ const ORD={eq:['Equipe',r=>-(r.f25+r.f26)],ou:['Outros gastos',r=>-r.e],no:['Nome',r=>r.g.nome]};
+ const lista=o=>{const f=ORD[o][1];return L.slice().sort((a,b)=>{const x=f(a),y=f(b);return typeof x==='string'?x.localeCompare(y,'pt'):x-y}).map(r=>`<li><a class="cd" href="#/v/${r.g.id}/gastos"><h3>${esc(r.g.nome)} ›</h3><dl><dt>Equipe 2025</dt><dd>${rs(r.f25)}</dd><dt>Equipe 2026</dt><dd>${rs(r.f26)}</dd><dt>Outros gastos</dt><dd>${rs(r.e)}</dd></dl></a></li>`).join('')};
  app.innerHTML=`<h1>Gastos da Câmara</h1><p>Tudo vem do Portal da Transparência da própria Câmara. ${lk('Abrir o portal')}. Atualizado em ${fd(G.gerado_em.slice(0,10))}.</p>
-<div class="tiles">${an.map(([a,x])=>`<div class="tile"><b>${rs(x.pago)}</b><span>pago pela Câmara em ${a}${a==='2026'?' (até agora)':''}</span></div>`).join('')}</div>
-<h2>Por gabinete</h2><p>Equipe: salário bruto de quem está lotado no gabinete, em 2025 e em 2026 (${n26} meses, até ${ult}). Outros gastos: valor empenhado em passagens, hospedagem, diárias, software, equipamentos e outros itens ligados ao vereador.</p>
-<table><tr><th>Vereador</th><th>Equipe 2025</th><th>Equipe 2026</th><th>Outros gastos</th></tr>${L.map(r=>`<tr><td><a href="#/v/${r.g.id}/gastos">${esc(r.g.nome)}</a></td><td>${rs(r.f25)}</td><td>${rs(r.f26)}</td><td>${rs(r.e)}</td></tr>`).join('')}</table>
+<div class="kpis">${an.map(([a,x])=>kpi(x.pago,'pago pela Câmara em '+a+(a==='2026'?' (até agora)':''))).join('')}</div>
+<h2>Por gabinete</h2><p>Equipe: salário bruto de quem está lotado no gabinete (2026: ${n26} meses, até ${ult}). Outros gastos: valor empenhado em passagens, hospedagem, diárias, software, equipamentos e outros itens ligados ao vereador.</p>
+<div class="sortb" role="group" aria-label="Ordenar por">${Object.entries(ORD).map(([k,x],i)=>`<button type="button" class="chip${i?'':' on'}" data-sort="${k}" aria-pressed="${i?'false':'true'}">${x[0]}</button>`).join('')}</div>
+<ul class="cards" id="glist">${lista('eq')}</ul>
 <p class="peq">Estagiários não aparecem com lotação no portal e ficam fora da equipe. Gabinete maior ou menor não mede qualidade do mandato.</p>
-<h2>Publicidade e comunicação</h2><p>Despesas com o subelemento "Serviços de Propaganda", "Serviços de Publicidade" ou "Serviços de Comunicação em Geral", como o portal classifica.</p>
-<table><tr><th>Ano</th><th>Fornecedor</th><th>Classificação</th><th>Contrato</th><th>Empenhado</th><th>Pago</th></tr>${pub.map(p=>`<tr><td>${p.ano}</td><td>${esc(p.credor)}</td><td>${esc(p.subelemento.replace(/^[\d.]+ - /,''))}</td><td>${esc(p.contrato||'sem contrato informado')}</td><td>${rs(p.empenhado)}</td><td>${rs(p.pago)}</td></tr>`).join('')}</table>
-<p class="peq">Pago é o valor acumulado nos empenhos listados. Pode diferir do total pago no ano em "Despesas pagas por período", outra tela do mesmo portal. ${lk('Fonte: Despesas Detalhadas')}.</p>`})}
+<h2>Publicidade e comunicação</h2><p>Despesas que o portal classifica como "Serviços de Propaganda", "Serviços de Publicidade" ou "Serviços de Comunicação em Geral".</p>
+<ul class="cards">${pubs.map(({p,anos})=>`<li class="cd"><h3>${esc(p.credor)}</h3><p class="sub">${esc(p.subelemento.replace(/^[\d.]+ - /,''))} · ${p.contrato?'contrato '+esc(p.contrato):'sem contrato informado'}</p><dl>${anos.sort((a,b)=>a.ano-b.ano).map(x=>`<dt>${x.ano} empenhado</dt><dd>${rs(x.empenhado)}</dd><dt>${x.ano} pago</dt><dd>${rs(x.pago)}</dd>`).join('')}</dl></li>`).join('')}</ul>
+<p class="peq">Pago é o valor acumulado nos empenhos listados. Pode diferir do total pago no ano em "Despesas pagas por período", outra tela do mesmo portal. ${lk('Fonte: Despesas Detalhadas')}.</p>`;
+ $('.sortb').addEventListener('click',e=>{const b=e.target.closest('[data-sort]');if(!b)return;$('#glist').innerHTML=lista(b.dataset.sort);document.querySelectorAll('.sortb .chip').forEach(c=>{const on=c===b;c.classList.toggle('on',on);c.setAttribute('aria-pressed',on)})})})}
