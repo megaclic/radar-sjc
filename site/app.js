@@ -3,7 +3,7 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const fd=d=>d?d.split('-').reverse().join('/'):'';const nf=n=>(n||0).toLocaleString('pt-BR');
 const MES=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];const fm=d=>d?MES[+d.slice(5,7)-1]+' '+d.slice(0,4):'';
 const norm=s=>(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
-const cache={};const get=async u=>cache[u]??(cache[u]=await (await fetch(u)).json());
+const cache={};const get=async u=>cache[u]??(cache[u]=await (await fetch(u+'?v='+(window.V||'dev'))).json());
 const PAGE=40;let R,NOME={};
 const dec=s=>{try{return decodeURIComponent(s||'')}catch(e){return s||''}};
 const GCOR={melhoria:'az',cobranca:'am',homenagem:'rs',lei:'vd'};
