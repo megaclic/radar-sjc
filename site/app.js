@@ -154,3 +154,7 @@ function sobre(){const G=R.grupos;app.innerHTML=`<div class="sobre"><h1>Como fun
 <h2>Limites</h2><ul><li>Quantidade de propostas não mede qualidade nem resultado.</li><li>Um pedido é só um pedido: o sistema da Câmara não informa se a Prefeitura atendeu.</li><li>Vários pedidos sobre o mesmo local não provam omissão da Prefeitura.</li><li>Dados coletados periodicamente; o dia da última atualização aparece no rodapé.</li></ul>
 <h2>Erro ou correção</h2><p>Se achar algum dado errado, abra o documento oficial pelo link do item e compare. Para avisar, escreva pela página de problemas do projeto: <a href="https://github.com/megaclic/radar-sjc/issues" target="_blank" rel="noopener">github.com/megaclic/radar-sjc/issues</a>.</p></div>`;}
 init();
+// Links externos abrem em nova aba (documentos oficiais): avisa quem usa leitor de tela.
+// O ícone visual vem do CSS (a[target=_blank]::after).
+function avisoNovaAba(raiz){(raiz||document).querySelectorAll('a[target=_blank]:not([data-na])').forEach(a=>{a.setAttribute('data-na','1');a.setAttribute('rel','noopener');const s=document.createElement('span');s.className='sr';s.textContent=' (abre em nova aba)';a.appendChild(s);});}
+new MutationObserver(()=>avisoNovaAba()).observe(document.body,{childList:true,subtree:true});avisoNovaAba();
