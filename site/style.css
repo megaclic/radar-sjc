@@ -91,3 +91,6 @@ h3{font-weight:700;letter-spacing:.07em}
 .vcab{background:var(--pc,#eee);border-radius:22px;padding:20px;display:flex;gap:18px;align-items:center;flex-wrap:wrap}
 .fotog{width:140px;height:140px;border-radius:50%;border:5px solid #fff;box-shadow:0 0 0 2px #14171a;object-position:top}.vcab h1{font-size:2.2rem}.part2{font-weight:800}
 @media(max-width:420px){.cabc img{width:104px;height:104px}.fotog{width:116px;height:116px}h1,h2{font-size:1.8rem}}
+
+.hero small a{font-weight:600}.hero .g{font-variant-numeric:tabular-nums;font-size:2.2rem;word-break:break-word}@media(min-width:640px){.hero .g{font-size:3.2rem}}
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:10px}.duo div{background:#f3f4f6;border-radius:12px;padding:10px 12px;font-size:.8rem;color:#2c3338}.duo b{display:block;font-size:1.05rem;color:var(--tx);font-weight:800}

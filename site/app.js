@@ -17,6 +17,10 @@ async function init(){try{R=await get('data/resumo.json');}catch(e){app.innerHTM
  const tb=document.createElement('button');tb.id='topo-btn';tb.setAttribute('aria-label','Voltar ao topo');tb.textContent='↑';document.body.appendChild(tb);
  addEventListener('scroll',()=>tb.classList.toggle('on',scrollY>900),{passive:true});
  rota();(window.requestIdleCallback||setTimeout)(()=>get('data/busca.json').catch(()=>{}));}
+const SALARIO=18991.68,RES5='https://diario.camarasjc.sp.gov.br/uploads/dio/86/2022/resolucao-n-5-1671468877.pdf';
+function gasto(n,agora=new Date()){let t=0,d=new Date(2025,0,1);while(d<agora){const p=new Date(d.getFullYear(),d.getMonth()+1,1),f=Math.min(1,(agora-d)/(p-d));t+=f;d=p}return t*SALARIO*n}
+const brl=x=>x.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+let TICK=null;
 let ULT='';
 function rota(){const h=location.hash.replace(/^#\/?/,'').split('/');const chave=h[0]+'/'+(h[0]==='v'?h[1]:'');if(chave!==ULT){window.scrollTo(0,0);}ULT=chave;
  switch(h[0]){case 'v':return vereador(+h[1],h[2]||'presenca',h[3]||'');
@@ -32,10 +36,10 @@ async function home(){const A=R.agreg,G=R.grupos,T=A.grupos_total;
  const temas=Object.entries(A.temas).filter(([k])=>k!=='Outros pedidos').slice(0,5);
  app.innerHTML=`<span class="selo"><i></i>Dados conferidos até ${esc(R.estado.camara_ultima_atualizacao)}</span>
 <h1>Raio-X de São José dos Campos</h1><p class="lead">O que cada vereador fez desde a posse, contado dia a dia com os registros oficiais da Câmara.</p>
-<div class="hero"><small>DESDE A POSSE, EM 1º DE JANEIRO DE 2025</small><div class="g">${nf(A.n_propostas)} propostas</div><small>apresentadas pelos ${R.vereadores.length} vereadores, e o número sobe toda semana</small>
-<div class="mini"><div><b>${nf(R.sessoes_total)}</b><small>sessões</small></div><div><b>${nf(R.votacoes_total-R.votacoes_secretas)}</b><small>votações com voto de cada um</small></div><div><b>${nf(A.n_recorrentes)}</b><small>ruas com pedido repetido</small></div></div></div>
+<div class="hero"><small>SALÁRIO PAGO AOS ${R.vereadores.length} VEREADORES DESDE A POSSE</small><div class="g" id="salario">R$ ${brl(gasto(R.vereadores.length))}</div><small>e subindo agora · estimativa: ${R.vereadores.length} salários de R$ ${brl(SALARIO)} por mês desde 1º de janeiro de 2025 · <a href="${RES5}" target="_blank" rel="noopener" style="color:#93c5fd">fonte: Resolução nº 5/2022</a></small></div>
 <div class="atalhos"><button class="chip" data-scroll="s-bairro">Seu bairro</button><button class="chip" data-scroll="s-ruas">Ruas com pedido repetido</button><button class="chip" data-scroll="s-tipos">Tipos de proposta</button><button class="chip" data-scroll="s-vers">Vereadores</button></div>
-<div class="tiles">${['melhoria','cobranca','homenagem','lei'].map(g=>`<a class="tile ${GCOR[g]}" href="#/grupo/${g}"><b>${nf(T[g])}</b><span>${esc(G[g])}</span></a>`).join('')}</div>
+<div class="tiles"><div class="tile"><b>${nf(A.n_propostas)}</b><span>propostas até agora</span></div>${['melhoria','homenagem','lei'].map(g=>`<a class="tile ${GCOR[g]}" href="#/grupo/${g}"><b>${nf(T[g])}</b><span>${esc(G[g])}</span></a>`).join('')}</div>
+<p class="peq" style="margin-top:10px">Última conferência na Câmara: ${esc(R.estado.camara_ultima_atualizacao)}. Os números sobem a cada atualização.</p>
 <section id="s-bairro"><h3>Comece por aqui</h3><h2>O que pediram pelo seu bairro?</h2><p class="peq">Digite o bairro ou a rua. Sem nada digitado, você vê a cidade inteira.</p>
 <form class="busca" id="fb"><input type="search" id="bq" list="lb" placeholder="Ex.: Jardim Satélite, Rua Tal, poda" autocomplete="off"><datalist id="lb">${bairros.slice(0,400).map(b=>`<option value="${esc(b[0])}">`).join('')}</datalist><button class="btn">Ver pedidos</button></form>
 <div class="chips">${bairros.slice(0,10).map(b=>`<a class="chip" href="#/busca/${encodeURIComponent(b[0])}">${esc(b[0])}</a>`).join('')}</div></section>
@@ -52,6 +56,7 @@ async function home(){const A=R.agreg,G=R.grupos,T=A.grupos_total;
 <section><h3>Transparência</h3><h2>De onde vêm os números</h2><p>Tudo sai do sistema da própria Câmara. Nada é digitado à mão. <a href="#/sobre">Veja como cada número é contado.</a></p></section>`;
  const draw=n=>{$('#rec').innerHTML=A.recorrentes.slice(0,n).map(r=>`<a class="recc" href="#/busca/${encodeURIComponent(r.rua)}/${encodeURIComponent(r.tema)}"><div class="n">${r.vezes}<small>VEZES</small></div><div><b>${esc(r.rua)}</b><span>${esc(r.bairro)}${r.bairro?' · ':''}${esc(r.tema)}</span><span>${r.vereadores} vereador${r.vereadores>1?'es':''} · de ${fm(r.de)} a ${fm(r.ate)}</span><span style="color:var(--az)">Ver pedidos →</span></div></a>`).join('')};draw(8);
  $('#mais').onclick=e=>{draw(A.recorrentes.length);e.target.remove()};
+ clearInterval(TICK);TICK=setInterval(()=>{const e=$('#salario');if(!e){clearInterval(TICK);return}e.textContent='R$ '+brl(gasto(R.vereadores.length))},1000);
  const grade=()=>{const n=norm($('#fnome').value),pt=$('#fpart').value,o=$('#ford').value;let L=R.vereadores.filter(v=>(!n||norm(v.nome).includes(n))&&(!pt||v.partido===pt));if(o==='pres')L.sort((a,b)=>pres(b).pct-pres(a).pct);else if(o==='props')L.sort((a,b)=>b.n_props-a.n_props);$('#fcont').textContent='Mostrando '+L.length+' de '+R.vereadores.length+' vereadores.';$('#gr').innerHTML=L.map(cartao).join('')||'<p>Nenhum vereador encontrado.</p>'};
  ['#fnome','#fpart','#ford'].forEach(x=>$(x).oninput=grade);grade();
  $('#fb').onsubmit=e=>{e.preventDefault();location.hash='#/busca/'+encodeURIComponent($('#bq').value.trim())};}
@@ -63,6 +68,7 @@ function donut(p){const a=p.tot?p.pr*100/p.tot:0,b=p.tot?p.fj*100/p.tot:0;return
 function cartao(v,i,full){const p=pres(v),g=v.grupos,sim=v.votos['Favorável']||0,nao=v.votos['Contrário']||0,ks=['melhoria','cobranca','homenagem','lei','posicionamento'],tot=ks.reduce((a,k)=>a+(g[k]||0),0)||1;
  return `<article class="cr" data-go="#/v/${v.id}" style="--pc:${PAST[v.id%PAST.length]}"><div class="cabc"><span class="slot"></span><img src="${esc(v.foto)}" alt="Foto de ${esc(v.nome)}" loading="lazy"><div class="nm"><h3><a href="#/v/${v.id}">${esc(v.nome)}</a></h3><div class="pills"><span class="pill">${esc(v.partido)}</span>${v.mesa&&v.mesa!=='não participa'?`<span class="pill cl">${esc(v.mesa)}</span>`:''}${v.situacao!=='Ativo'?`<span class="pill cl">${esc(v.situacao)}</span>`:''}</div></div></div>
 <div class="corpo"><div class="prow">${donut(p)}<div><b>${nf(p.pr)} de ${nf(p.tot)}</b> sessões até agora<div class="peq">${nf(p.fj)} ausência${p.fj===1?'':'s'} justificada${p.fj===1?'':'s'} · <span style="${p.f?'color:#dc2626;font-weight:700':''}">${nf(p.f)} falta${p.f===1?'':'s'}</span></div></div></div>
+<div class="duo"><div><b>R$ ${brl(SALARIO)}</b>salário por mês</div><div><b>${nf(sim+nao+(v.votos['Abstenção']||0))}</b>votos registrados</div></div>
 <h4>O que propôs até agora</h4><div class="sb">${ks.filter(k=>g[k]).map(k=>`<i style="flex:${g[k]};background:${GC[k]}"></i>`).join('')}</div>
 ${ks.filter(k=>g[k]).map(k=>`<a class="gl" href="#/v/${v.id}/propostas/${k}"><span><i class="dot" style="background:${GC[k]}"></i>${GN[k]}</span><b>${nf(g[k])} ›</b></a>`).join('')}
 <h4>Como votou até agora</h4><div class="vb"><div class="sim"><b>${nf(sim)}</b>vezes sim</div><div class="nao"><b>${nf(nao)}</b>vezes não</div></div>
@@ -143,6 +149,7 @@ function sobre(){const G=R.grupos;app.innerHTML=`<div class="sobre"><h1>Como fun
 <li><b>${esc(G.saude_individual)}:</b> pedidos que citam uma pessoa. O texto não é exibido (privacidade).</li>
 <li><b>${esc(G.posicionamento)}:</b> apoio, repúdio e matérias registradas.</li></ul>
 <p>Atas, emendas, substitutivos e licenças não são propostas do vereador e ficam de fora das contagens. Como a regra lê o texto, um caso isolado pode cair no grupo errado: use o link do documento oficial.</p>
+<h2>Salário</h2><p>O subsídio mensal de cada vereador, R$ ${brl(SALARIO)} (valor bruto, sem descontos), foi fixado pela <a href="${RES5}" target="_blank" rel="noopener">Resolução nº 5/2022 da Câmara</a> para a legislatura que começou em 1º de janeiro de 2025. O contador do topo é uma estimativa: ${R.vereadores.length} salários por mês, proporcional ao tempo desde a posse, sem 13º nem outros pagamentos, e sem descontar licenças ou faltas. A tabela de verbas remuneratórias do Diário Oficial Legislativo da Câmara traz os valores pagos, inclusive o do presidente.</p>
 <h2>Temas, ruas e bairros</h2><p>O tema (trânsito, poda, buraco...), a rua e o bairro de cada pedido são lidos do texto oficial por palavras-chave, com a mesma regra para todos. Se o texto não cita o local, o pedido fica sem rua ou bairro. Pode haver erros de leitura, por isso cada item tem o link do documento original.</p>
 <h2>Limites</h2><ul><li>Quantidade de propostas não mede qualidade nem resultado.</li><li>Um pedido é só um pedido: o sistema da Câmara não informa se a Prefeitura atendeu.</li><li>Vários pedidos sobre o mesmo local não provam omissão da Prefeitura.</li><li>Dados coletados periodicamente; o dia da última atualização aparece no rodapé.</li></ul>
 <h2>Erro ou correção</h2><p>Se achar algum dado errado, abra o documento oficial pelo link do item e compare. Para avisar, escreva pela página de problemas do projeto: <a href="https://github.com/megaclic/radar-sjc/issues" target="_blank" rel="noopener">github.com/megaclic/radar-sjc/issues</a>.</p></div>`;}
