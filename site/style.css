@@ -60,3 +60,34 @@ a.tile::after{content:'›';float:right;font-size:1.6rem;line-height:1;color:var
 .item a{padding:2px 0}
 #topo-btn{position:fixed;right:14px;bottom:18px;width:48px;height:48px;border-radius:50%;border:0;background:var(--tx);color:#fff;font-size:1.4rem;box-shadow:0 3px 10px #0004;opacity:0;pointer-events:none;transition:opacity .2s;z-index:6;cursor:pointer}#topo-btn.on{opacity:1;pointer-events:auto}
 @media(max-width:420px){.cr img{width:92px;height:116px}.fotog{width:104px;height:130px}}
+
+/* ---- v4: identidade inspirada no modelo (tipografia pesada, crachás, cores por tipo) ---- */
+body{letter-spacing:-.005em}h1,h2{font-weight:800;letter-spacing:-.03em}h1{font-size:2.1rem;line-height:1.05}h2{font-size:2rem;line-height:1.05;margin:.1em 0 .25em}
+h3{font-weight:700;letter-spacing:.07em}
+.marca{font-weight:900;font-size:1.25rem;letter-spacing:-.02em}.marca b{color:#dc2626}.ponto{width:14px;height:14px;background:#dc2626;box-shadow:0 0 0 4px #dc262622,0 0 0 9px #dc262611}
+.hero{background:#0f172a;border-radius:18px;padding:20px}.hero small:first-child{color:#fca5a5;font-weight:700;letter-spacing:.06em;font-size:.75rem}.hero .g{font-size:2.6rem;font-weight:900;letter-spacing:-.03em}
+.tile{background:#f3f4f6;border:0;border-radius:14px;padding:14px}.tile b{font-size:2.3rem;font-weight:900;letter-spacing:-.03em;color:var(--tx)}.tile.az b{color:#1d4ed8}.tile.am b{color:#d9580d}.tile.rs b{color:#c2185b}.tile.vd b{color:#0a8f5b}
+.busca input[type=search]{border:2px solid #111;border-radius:14px;padding-left:16px}
+.recc{border-radius:16px;box-shadow:0 1px 3px #0001}.recc .n{font-size:2.6rem;font-weight:900;color:#dc2626;letter-spacing:-.04em}.recc>div:last-child b{font-weight:800;font-size:1.05rem}.recc span:last-child{color:#dc2626;font-weight:700}
+.filtros{display:grid;grid-template-columns:1fr;gap:10px;margin:12px 0}.filtros label{font-size:.75rem;font-weight:700;color:var(--mu);display:block}.filtros input,.filtros select{display:block;width:100%;margin-top:4px;background:#f3f4f6;border:2px solid transparent;font-weight:400}
+@media(min-width:640px){.filtros{grid-template-columns:1fr 1fr 1fr}}
+/* crachá */
+.grade{gap:18px}
+.cr{padding:0;overflow:hidden;border-radius:22px;border:1px solid var(--li);background:#fff;gap:0;box-shadow:0 1px 4px #0001}
+.cabc{background:var(--pc);padding:26px 18px 16px;position:relative;display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.cabc .slot{position:absolute;top:8px;left:50%;width:46px;height:10px;margin-left:-23px;border-radius:99px;background:#fff;box-shadow:inset 0 1px 3px #0003}
+.cabc img{width:112px;height:112px;border-radius:50%;object-fit:cover;object-position:top;border:4px solid #fff;box-shadow:0 0 0 2px #14171a;background:#e9ecef;flex:none}
+.cabc .nm{flex:1;min-width:140px}.cabc h3{text-transform:none;letter-spacing:-.025em;font-size:1.55rem;font-weight:900;line-height:1.05;margin:0 0 8px;color:var(--tx)}.cabc h3 a{color:inherit;text-decoration:none}
+.pills{display:flex;flex-wrap:wrap;gap:6px}.pill{background:#14171a;color:#fff;font-size:.78rem;font-weight:800;border-radius:6px;padding:3px 9px;letter-spacing:.03em}.pill.cl{background:#fff;color:#14171a;border:1px solid #14171a22}
+.corpo{padding:16px 18px 18px;display:flex;flex-direction:column;gap:10px}
+.prow{display:flex;gap:14px;align-items:center}.donut{width:74px;height:74px;border-radius:50%;display:grid;place-items:center;flex:none}.donut span{width:58px;height:58px;border-radius:50%;background:#fff;display:grid;place-items:center;font-weight:900;font-size:1.05rem}
+.corpo h4{font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--mu);margin:10px 0 0;font-weight:800}
+.sb{display:flex;height:9px;border-radius:99px;overflow:hidden;gap:2px;margin:2px 0 4px}.sb i{display:block;min-width:4px}
+.gl{border-bottom:0;padding:6px 4px;min-height:44px}.gl .dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:10px}.gl b{color:var(--tx)}.gl:hover{background:#f3f4f6}
+.vb{display:grid;grid-template-columns:1fr 1fr;gap:10px}.vb div{border-radius:12px;padding:10px 12px;font-size:.85rem;color:#2c3338}.vb b{display:block;font-size:1.5rem;font-weight:900;color:var(--tx)}.vb .sim{background:#e3f6ea}.vb .nao{background:#fde7e4}
+.corpo .link{color:var(--az);font-weight:700;padding:6px 0}
+.cr:hover{box-shadow:0 8px 24px #0002}
+/* cabeçalho do vereador */
+.vcab{background:var(--pc,#eee);border-radius:22px;padding:20px;display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.fotog{width:140px;height:140px;border-radius:50%;border:5px solid #fff;box-shadow:0 0 0 2px #14171a;object-position:top}.vcab h1{font-size:2.2rem}.part2{font-weight:800}
+@media(max-width:420px){.cabc img{width:104px;height:104px}.fotog{width:116px;height:116px}h1,h2{font-size:1.8rem}}
