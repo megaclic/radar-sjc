@@ -179,20 +179,32 @@ function pGas(v){get('data/gastos.json').then(G=>{if(CV!==v.id)return;const g=G.
 <details><summary><b>Ver um por um (${nf(g.itens.length)})</b></summary><ul class="cards">${g.itens.map(i=>`<li class="cd"><h3>${esc(i.cat)}</h3><p class="sub">${fd(i.d)} · ${esc(i.doc)} · ${esc(i.cred)}</p><p class="hist">${esc(i.h)}</p><dl><dt>Empenhado</dt><dd>${rs(i.emp)}</dd><dt>Pago</dt><dd>${rs(i.pago)}</dd></dl></li>`).join('')}</ul></details>`:'<p>O portal não mostra nenhum gasto ligado ao centro de custo deste vereador nesse período.</p>'}
 <p class="peq">Só aparece o que o portal liga ao centro de custo do vereador. ${lk('Fonte: Despesas Detalhadas, no portal')} (procure pelo número do empenho). Atualizado em ${fd(G.gerado_em.slice(0,10))}.</p>`})}
 function gastosGeral(){app.innerHTML='<h1>Gastos da Câmara</h1><p>Carregando…</p>';get('data/gastos.json').then(G=>{
- const cs=G.competencias,n26=cs.filter(c=>c.endsWith('2026')).length,ult=cs[cs.length-1];
- const L=G.vereadores.map(g=>({g,f25:somaFolha(g.folha,c=>c.endsWith('2025')),f26:somaFolha(g.folha,c=>c.endsWith('2026')),e:Object.values(catTot(g)).reduce((t,x)=>t+x[0],0)}));
- const an=Object.entries(G.geral.anos);
+ const cs=G.competencias,ult=cs[cs.length-1],an=Object.entries(G.geral.anos);
+ const TIPOS=[...new Set(G.vereadores.flatMap(g=>Object.values(g.cats).flatMap(a=>Object.keys(a))))];
+ TIPOS.sort((a,b)=>(a==='Outros')-(b==='Outros')||a.localeCompare(b,'pt'));
+ const ST={tipo:'total',ano:'all',dir:'desc'};
+ const anos=()=>ST.ano==='all'?G.anos.map(String):[ST.ano];
+ const val=(g,t)=>{const ys=anos(),eq=somaFolha(g.folha,c=>ys.includes(c.slice(3))),ou=ys.reduce((s,y)=>s+Object.values(g.cats[y]||{}).reduce((q,x)=>q+x[0],0),0);
+  return t==='total'?eq+ou:t==='equipe'?eq:ys.reduce((s,y)=>s+((g.cats[y]||{})[t]||[0,0])[0],0)};
+ const NOMET=t=>t==='total'?'gasto total do gabinete (equipe + outros gastos)':t==='equipe'?'equipe (salário bruto)':t;
  const grp={};G.publicidade.forEach(p=>{const k=p.credor+'|'+p.contrato+'|'+p.subelemento;(grp[k]=grp[k]||{p,anos:[]}).anos.push(p)});
  const pubs=Object.values(grp).sort((a,b)=>b.anos.reduce((t,x)=>t+x.empenhado,0)-a.anos.reduce((t,x)=>t+x.empenhado,0));
- const ORD={eq:['Equipe',r=>-(r.f25+r.f26)],ou:['Outros gastos',r=>-r.e],no:['Nome',r=>r.g.nome]};
- const lista=o=>{const f=ORD[o][1];return L.slice().sort((a,b)=>{const x=f(a),y=f(b);return typeof x==='string'?x.localeCompare(y,'pt'):x-y}).map(r=>`<li><a class="cd" href="#/v/${r.g.id}/gastos"><h3>${esc(r.g.nome)} ›</h3><dl><dt>Equipe 2025</dt><dd>${rs(r.f25)}</dd><dt>Equipe 2026</dt><dd>${rs(r.f26)}</dd><dt>Outros gastos</dt><dd>${rs(r.e)}</dd></dl></a></li>`).join('')};
+ const chip=(g,k,v,t)=>`<button type="button" class="chip${ST[g]===v?' on':''}" data-g="${g}" data-v="${v}" aria-pressed="${ST[g]===v}">${t}</button>`;
+ const rank=()=>{const L=G.vereadores.map(g=>({g,v:val(g,ST.tipo),eq:val(g,'equipe'),ou:val(g,'total')-val(g,'equipe'),pes:(g.folha[ult]||[0,0])[1]}));
+  L.sort((a,b)=>ST.dir==='desc'?b.v-a.v:a.v-b.v);const mx=Math.max(...L.map(r=>r.v))||1,tot=L.reduce((t,r)=>t+r.v,0),
+  maior=L.slice().sort((a,b)=>b.v-a.v)[0],menor=L.slice().sort((a,b)=>a.v-b.v)[0];
+  return `<div class="kpis">${kpi(tot,'soma dos 21 gabinetes')}</div><p><b>Quem mais gastou:</b> ${esc(maior.g.nome)}, ${rs(maior.v)}.<br>${menor.v?`<b>Quem menos gastou:</b> ${esc(menor.g.nome)}, ${rs(menor.v)}.`:`<b>Sem nenhum gasto:</b> ${L.filter(r=>!r.v).length} vereadores.`}</p>
+  <ol class="cards rank">${L.map((r,i)=>`<li><a class="cd" href="#/v/${r.g.id}/gastos"><h3><span class="pos">${i+1}º</span> ${esc(r.g.nome)} ›</h3><div class="bar"><i style="width:${Math.round(r.v*100/mx)}%"></i></div><dl><dt>${ST.tipo==='total'||ST.tipo==='equipe'?'Valor':'Empenhado'}</dt><dd>${r.v?rs(r.v):'sem gasto'}</dd>${ST.tipo==='total'?`<dt>Equipe</dt><dd>${rs(r.eq)}</dd><dt>Outros gastos</dt><dd>${rs(r.ou)}</dd>`:''}<dt>Pessoas na equipe (${ult})</dt><dd>${nf(r.pes)}</dd></dl></a></li>`).join('')}</ol>`};
+ const draw=()=>{$('#ctl').innerHTML=`<p class="peq" style="margin:10px 0 4px">Período</p><div class="sortb">${chip('ano','ano','all','2025 e 2026')}${G.anos.map(y=>chip('ano','ano',String(y),y+(y==2026?' (até out)':''))).join('')}</div>
+  <p class="peq" style="margin:10px 0 4px">O que foi gasto</p><div class="sortb">${chip('tipo','tipo','total','Tudo')}${chip('tipo','tipo','equipe','Equipe')}${TIPOS.map(t=>chip('tipo','tipo',t,esc(t))).join('')}</div>
+  <p class="peq" style="margin:10px 0 4px">Ordem</p><div class="sortb">${chip('dir','dir','desc','Quem mais gasta')}${chip('dir','dir','asc','Quem menos gasta')}</div>`;
+  $('#rk').innerHTML=`<h3 style="margin:14px 0 4px;text-transform:none;letter-spacing:0;color:var(--tx)">Ranking: ${esc(NOMET(ST.tipo))}</h3>`+rank()};
  app.innerHTML=`<h1>Gastos da Câmara</h1><p>Tudo vem do Portal da Transparência da própria Câmara. ${lk('Abrir o portal')}. Atualizado em ${fd(G.gerado_em.slice(0,10))}.</p>
 <div class="kpis">${an.map(([a,x])=>kpi(x.pago,'pago pela Câmara em '+a+(a==='2026'?' (até agora)':''))).join('')}</div>
-<h2>Por gabinete</h2><p>Equipe: salário bruto de quem está lotado no gabinete (2026: ${n26} meses, até ${ult}). Outros gastos: valor empenhado em passagens, hospedagem, diárias, software, equipamentos e outros itens ligados ao vereador.</p>
-<div class="sortb" role="group" aria-label="Ordenar por">${Object.entries(ORD).map(([k,x],i)=>`<button type="button" class="chip${i?'':' on'}" data-sort="${k}" aria-pressed="${i?'false':'true'}">${x[0]}</button>`).join('')}</div>
-<ul class="cards" id="glist">${lista('eq')}</ul>
-<p class="peq">Estagiários não aparecem com lotação no portal e ficam fora da equipe. Gabinete maior ou menor não mede qualidade do mandato.</p>
-<h2>Publicidade e comunicação</h2><p>Despesas que o portal classifica como "Serviços de Propaganda", "Serviços de Publicidade" ou "Serviços de Comunicação em Geral".</p>
+<h2>Ranking dos gabinetes</h2><p>Cada gasto está ligado ao vereador pelo centro de custo do portal. Escolha o período e o tipo de gasto. Toque no nome para ver cada compra.</p>
+<div id="ctl"></div><div id="rk"></div>
+<p class="peq">Equipe: salário bruto de quem está lotado no gabinete (2026: até ${ult}). Os outros tipos são valores empenhados, isto é, reservados para pagar. Estagiários não aparecem com lotação no portal e ficam fora. <b>Gabinete com mais gente custa mais: o ranking mede valor, não qualidade do mandato.</b></p>
+<h2>Publicidade e comunicação da Câmara</h2><p>Despesas que o portal classifica como "Serviços de Propaganda", "Serviços de Publicidade" ou "Serviços de Comunicação em Geral". Não são de um vereador, são da Câmara.</p>
 <ul class="cards">${pubs.map(({p,anos})=>`<li class="cd"><h3>${esc(p.credor)}</h3><p class="sub">${esc(p.subelemento.replace(/^[\d.]+ - /,''))} · ${p.contrato?'contrato '+esc(p.contrato):'sem contrato informado'}</p><dl>${anos.sort((a,b)=>a.ano-b.ano).map(x=>`<dt>${x.ano} empenhado</dt><dd>${rs(x.empenhado)}</dd><dt>${x.ano} pago</dt><dd>${rs(x.pago)}</dd>`).join('')}</dl></li>`).join('')}</ul>
 <p class="peq">Pago é o valor acumulado nos empenhos listados. Pode diferir do total pago no ano em "Despesas pagas por período", outra tela do mesmo portal. ${lk('Fonte: Despesas Detalhadas')}.</p>`;
- $('.sortb').addEventListener('click',e=>{const b=e.target.closest('[data-sort]');if(!b)return;$('#glist').innerHTML=lista(b.dataset.sort);document.querySelectorAll('.sortb .chip').forEach(c=>{const on=c===b;c.classList.toggle('on',on);c.setAttribute('aria-pressed',on)})})})}
+ draw();app.addEventListener('click',e=>{const b=e.target.closest('[data-g]');if(!b||!$('#ctl'))return;ST[b.dataset.g]=b.dataset.v;draw()})})}
