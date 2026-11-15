@@ -183,3 +183,4 @@ a.cd::after{content:none}
 .cd small{font-size:.8rem}
 .sortb{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 4px}
 @media(min-width:720px){.cards{grid-template-columns:repeat(2,1fr)}}
+.cd h3{text-transform:none;letter-spacing:0;color:var(--tx)}
