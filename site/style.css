@@ -190,3 +190,21 @@ ol.cards{counter-reset:none}
 .bar{height:6px;border-radius:3px;background:var(--bg2,#e5e5ea);margin:2px 0 8px;overflow:hidden}
 .bar i{display:block;height:100%;background:var(--btn,#0062cc);border-radius:3px}
 .sortb .chip{min-height:40px}
+
+/* v7: cabecalho escuro, busca, grafico, comparar, nota fiscal */
+.topo{background:#0b1b2b;border-bottom:0;gap:8px 18px}
+.topo .marca,.topo .marca:hover{color:#fff}.topo .marca b{color:#ff8a80}
+.topo nav a{color:#dbe7f5}.topo nav a:hover{opacity:1;color:#fff;border-bottom:2px solid #ffe14d}
+.hs{margin-left:auto;flex:1 1 180px;max-width:300px}
+.hs input{width:100%;min-height:40px;border-radius:20px;border:1px solid #2c4054;background:#13293d;color:#fff;padding:0 14px;font:inherit}
+.hs input::placeholder{color:#a9bccf}.hs input:focus{outline:2px solid #ffe14d;outline-offset:1px}
+.graf{width:100%;max-width:520px;height:auto;color:var(--mu);display:block;margin:6px 0}
+.gt{margin:16px 0 0;text-transform:none;letter-spacing:0;color:var(--tx);font-size:1rem}
+.nf{font-size:.8rem;color:var(--mu);margin:8px 0 0;overflow-wrap:anywhere}
+.cmpsel{display:grid;gap:10px;margin:12px 0}.cmpsel label{display:grid;gap:4px;font-weight:600}
+.cmpsel select{min-height:44px;font:inherit;border-radius:10px;border:1px solid var(--li);padding:0 10px;background:var(--bg);color:var(--tx)}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:0 10px;margin:14px 0}
+.cmp>div{padding:8px 4px;border-bottom:1px solid var(--li);overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.cmp .cmph{font-weight:800;border-bottom:2px solid var(--tx)}.cmp .cmph:first-child{display:none}
+.cmp .cmpl{grid-column:1/-1;color:var(--mu);font-size:.85rem;border-bottom:0;padding-bottom:0;padding-top:12px}
+@media(min-width:640px){.cmpsel{grid-template-columns:1fr 1fr}.cmp{grid-template-columns:1.2fr 1fr 1fr}.cmp .cmph:first-child{display:block}.cmp .cmpl{grid-column:auto;color:var(--tx);font-size:1rem;padding-top:8px;border-bottom:1px solid var(--li)}}

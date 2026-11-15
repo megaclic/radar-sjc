@@ -9,6 +9,9 @@ const dec=s=>{try{return decodeURIComponent(s||'')}catch(e){return s||''}};
 const GCOR={melhoria:'az',cobranca:'am',homenagem:'rs',lei:'vd'};
 async function init(){try{R=await get('data/resumo.json');}catch(e){app.innerHTML='<h1>Não foi possível carregar os dados</h1><p>Se você abriu o arquivo direto da pasta (endereço começando com file://), o navegador bloqueia a leitura dos dados. Abra pelo servidor local: dê dois cliques em <b>servir.bat</b> (na pasta do projeto) e acesse <b>http://localhost:8000</b>. Online, no GitHub Pages, isso não acontece.</p>';return;}
  R.vereadores.forEach(v=>NOME[v.id]=v.nome);
+ $('#hl').innerHTML=R.vereadores.map(v=>`<option value="${esc(v.nome)}">`).join('');
+ $('#hs').addEventListener('submit',e=>{e.preventDefault();const q=norm($('#hq').value),v=R.vereadores.find(x=>norm(x.nome)===q)||R.vereadores.find(x=>norm(x.nome).includes(q));if(v&&q){location.hash='#/v/'+v.id+'/presenca';$('#hq').value='';$('#hq').blur()}});
+ $('#hq').addEventListener('change',()=>{const q=norm($('#hq').value),v=R.vereadores.find(x=>norm(x.nome)===q);if(v){location.hash='#/v/'+v.id+'/presenca';$('#hq').value=''}});
  $('#atualizado').textContent='Dados atualizados até '+R.estado.camara_ultima_atualizacao+' (coletados em '+fd(R.estado.atualizado_em.slice(0,10))+'). Legislatura atual, desde 01/01/2025.';
  window.addEventListener('hashchange',rota);
  document.addEventListener('click',e=>{const c=e.target.closest('[data-go]');if(c&&!e.target.closest('a,button,input,select')){location.hash=c.dataset.go}
@@ -26,7 +29,7 @@ function rota(){const h=location.hash.replace(/^#\/?/,'').split('/');const chave
  switch(h[0]){case 'v':return vereador(+h[1],h[2]||'presenca',h[3]||'');
   case 'busca':return busca(dec(h[1]),dec(h[2]),dec(h[3]),dec(h[4]));
   case 'tema':return busca('',dec(h[1]),'','');case 'grupo':return busca('','',dec(h[1]),'');
-  case 'gastos':return gastosGeral();case 'sobre':return sobre();default:return home();}}
+  case 'gastos':return gastosGeral();case 'comparar':return comparar(+h[1]||0,+h[2]||0);case 'sobre':return sobre();default:return home();}}
 const pres=v=>{const p=v.presenca,pr=p['Presente']||0,fj=p['Falta Justificada']||0,f=p['Falta']||0,tot=pr+fj+f;return {pr,fj,f,tot,pct:tot?Math.round(pr*100/tot):0}};
 function share(t,u){return `<button class="btn cl share" onclick="(navigator.share?navigator.share({title:'${esc(t)}',url:location.href}):navigator.clipboard.writeText(location.href).then(()=>this.textContent='Link copiado'))">Compartilhar</button>`}
 /* ---------- INÍCIO ---------- */
@@ -80,7 +83,7 @@ function vereador(id,aba,sub){const v=R.vereadores.find(x=>x.id===id);if(!v)retu
  if(CV!==id||!$('#aba')){CV=id;
  app.innerHTML=`<p><a href="#/">← Todos os vereadores</a></p><div class="vcab" style="--pc:${PAST[v.id%PAST.length]}"><img class="fotog" src="${esc(v.foto)}" alt="Foto de ${esc(v.nome)}"><div><h1 style="margin:0">${esc(v.nome)}</h1><div class="part2">${esc(v.partido)}${v.mesa&&v.mesa!=='não participa'?' · Mesa Diretora: '+esc(v.mesa):''}</div><div class="peq">${esc(v.email)} ${esc(v.telefone)}</div><p style="margin:8px 0 0">${share(v.nome)}</p></div></div>
 <div class="tiles" style="margin-top:14px"><div class="tile"><b>${p.pct}%</b><span>presença (${nf(p.pr)} de ${nf(p.tot)} sessões)</span></div><div class="tile"><b>${nf(v.n_props)}</b><span>propostas</span></div><div class="tile"><b>${nf(v.votos['Favorável'])}</b><span>votos sim</span></div><div class="tile"><b>${nf(v.votos['Contrário'])}</b><span>votos não</span></div></div>
-<div class="abas" id="abas"></div><div id="aba">Carregando…</div>`;}
+<p style="margin:10px 0 0"><a class="link" href="#/comparar/${v.id}">Comparar com outro vereador →</a></p><div class="abas" id="abas"></div><div id="aba">Carregando…</div>`;}
  $('#abas').innerHTML=ab.map(([k,t])=>`<a class="${k===aba?'on':''}" href="#/v/${id}/${k}">${t}</a>`).join('');
  const mudouAba=$('#aba').dataset.k!==aba+id;$('#aba').dataset.k=aba+id;
  get('data/v/'+id+'.json').then(d=>{if(CV!==id)return;({presenca:pPres,propostas:pProp,votos:pVot,gastos:pGas})[aba](v,d,sub);
@@ -167,17 +170,33 @@ const somaFolha=(f,fn)=>Object.entries(f||{}).filter(([c])=>fn(c)).reduce((t,[,x
 const catTot=(v)=>{const o={};Object.values(v.cats||{}).forEach(a=>Object.entries(a).forEach(([c,x])=>{o[c]=o[c]||[0,0];o[c][0]+=x[0];o[c][1]+=x[1]}));return o};
 const lk=t=>`<a href="${PORTAL}" target="_blank" rel="noopener">${t}</a>`;
 const kpi=(x,t)=>`<div class="tile"><b>${mi(x)}</b><span>${t}<br>${rs(x)}</span></div>`;
+const barras=(pares,rot)=>{const mx=Math.max(...pares.map(p=>p[1]),1),W=320,H=130,bw=W/pares.length;
+ return `<svg class="graf" viewBox="0 0 ${W} ${H+20}" role="img" aria-label="${esc(rot)}">`+pares.map((p,i)=>{const h=Math.round(p[1]/mx*H);return `<g><title>${esc(p[0])}: ${rs(p[1])}</title><rect x="${(i*bw+2).toFixed(1)}" y="${H-h}" width="${(bw-4).toFixed(1)}" height="${h}" rx="3" fill="var(--btn)"/><text x="${(i*bw+bw/2).toFixed(1)}" y="${H+14}" text-anchor="middle" font-size="9" fill="currentColor">${p[0].slice(0,2)}</text></g>`}).join('')+'</svg>'};
 function pGas(v){get('data/gastos.json').then(G=>{if(CV!==v.id)return;const g=G.vereadores.find(x=>x.id===v.id);
  if(!g){$('#aba').innerHTML='<p>Sem dados de gastos para este vereador.</p>';return}
  const cs=G.competencias,n25=cs.filter(c=>c.endsWith('2025')).length,n26=cs.filter(c=>c.endsWith('2026')).length,ult=cs[cs.length-1],pes=(g.folha[ult]||[0,0])[1];
  const f25=somaFolha(g.folha,c=>c.endsWith('2025')),f26=somaFolha(g.folha,c=>c.endsWith('2026')),ct=catTot(g),cats=Object.entries(ct).sort((a,b)=>b[1][0]-a[1][0]),emp=cats.reduce((t,[,x])=>t+x[0],0);
+ const sub=SALARIO*cs.length,tot=sub+f25+f26+emp,u12=cs.slice(-12).map(c=>[c,(g.folha[c]||[0])[0]]),mn=u12.slice().sort((a,b)=>a[1]-b[1])[0],mxx=u12.slice().sort((a,b)=>b[1]-a[1])[0];
  $('#aba').innerHTML=`<p>Gastos ligados a este vereador no Portal da Transparência da Câmara, em ${G.anos.join(' e ')}.</p>
+<h2>Custo do mandato</h2><div class="kpis">${kpi(tot,'subsídio + equipe + outros gastos')}</div>
+<div class="cd"><dl><dt>Subsídio (${cs.length} meses × R$ ${brl(SALARIO)}, estimativa)</dt><dd>${rs(sub)}</dd><dt>Equipe do gabinete</dt><dd>${rs(f25+f26)}</dd><dt>Outros gastos (empenhado)</dt><dd>${rs(emp)}</dd></dl></div>
 <h2>Equipe do gabinete</h2><div class="kpis">${kpi(f25,'equipe em 2025 ('+n25+' meses)')}${kpi(f26,'equipe em 2026 ('+n26+' meses, até '+ult+')')}</div>
 <p>${nf(pes)} pessoas lotadas no gabinete em ${ult}. Soma do salário bruto de quem está lotado ali. Estagiários não aparecem com lotação no portal e ficam de fora. ${lk('Fonte: Remuneração, no portal')}.</p>
+<h3 class="gt">Folha mensal do gabinete, últimos ${u12.length} meses</h3>${barras(u12,'Folha mensal do gabinete nos últimos '+u12.length+' meses')}
+<p class="peq">Barras partem do zero. Menor mês: ${esc(mn[0])}, ${rs(mn[1])}. Maior mês: ${esc(mxx[0])}, ${rs(mxx[1])}.</p>
 <h2>Outros gastos do gabinete</h2>${cats.length?`<div class="kpis">${kpi(emp,'empenhado em '+G.anos.join(' e '))}</div><p class="peq">Empenhado é o valor reservado para pagar. O valor pago aparece ao lado de cada tipo.</p>
 <div class="cd"><dl>${cats.map(([c,x])=>`<dt>${esc(c)}<br><small>pago ${rs(x[1])}</small></dt><dd>${rs(x[0])}</dd>`).join('')}</dl></div>
-<details><summary><b>Ver um por um (${nf(g.itens.length)})</b></summary><ul class="cards">${g.itens.map(i=>`<li class="cd"><h3>${esc(i.cat)}</h3><p class="sub">${fd(i.d)} · ${esc(i.doc)} · ${esc(i.cred)}</p><p class="hist">${esc(i.h)}</p><dl><dt>Empenhado</dt><dd>${rs(i.emp)}</dd><dt>Pago</dt><dd>${rs(i.pago)}</dd></dl></li>`).join('')}</ul></details>`:'<p>O portal não mostra nenhum gasto ligado ao centro de custo deste vereador nesse período.</p>'}
-<p class="peq">Só aparece o que o portal liga ao centro de custo do vereador. ${lk('Fonte: Despesas Detalhadas, no portal')} (procure pelo número do empenho). Atualizado em ${fd(G.gerado_em.slice(0,10))}.</p>`})}
+<details><summary><b>Ver um por um (${nf(g.itens.length)})</b></summary><ul class="cards">${g.itens.map(i=>`<li class="cd"><h3>${esc(i.cat)}</h3><p class="sub">${fd(i.d)} · ${esc(i.doc)} · ${esc(i.cred)}</p><p class="hist">${esc(i.h)}</p><dl><dt>Empenhado</dt><dd>${rs(i.emp)}</dd><dt>Pago</dt><dd>${rs(i.pago)}</dd></dl><p class="nf"><b>Nota fiscal:</b> ${(i.nf&&i.nf.length&&i.nf.some(n=>n.nf))?i.nf.filter(n=>n.nf).map(n=>esc(n.nf)).join('<br>'):'não informada no portal'}</p></li>`).join('')}</ul><p class="peq">O portal informa o número, a emissão e o valor da nota. Não mostra o arquivo da nota nem a lista de itens comprados.</p></details>`:'<p>O portal não mostra nenhum gasto ligado ao centro de custo deste vereador nesse período.</p>'}
+<p class="peq">Só aparece o que o portal liga ao centro de custo do vereador. O subsídio é estimado pela Resolução nº 5/2022. ${lk('Fonte: Despesas Detalhadas, no portal')} (procure pelo número do empenho). Atualizado em ${fd(G.gerado_em.slice(0,10))}.</p>`})}
+function comparar(a,b){app.innerHTML='<h1>Comparar vereadores</h1><p>Carregando…</p>';get('data/gastos.json').then(G=>{
+ const opt=id=>`<option value="">Escolha…</option>`+R.vereadores.map(v=>`<option value="${v.id}"${v.id===id?' selected':''}>${esc(v.nome)}</option>`).join('');
+ const info=id=>{const v=R.vereadores.find(x=>x.id===id);if(!v)return null;const g=G.vereadores.find(x=>x.id===id),p=pres(v),eq=somaFolha(g.folha,()=>true),ou=Object.values(catTot(g)).reduce((t,x)=>t+x[0],0);return {v,p,eq,ou,tot:SALARIO*G.competencias.length+eq+ou}};
+ const A=info(a),B=info(b);
+ const lin=[['Partido',x=>esc(x.v.partido)],['Presença nas sessões',x=>x.p.pct+'% ('+nf(x.p.pr)+' de '+nf(x.p.tot)+')'],['Faltas sem justificativa',x=>nf(x.p.f)],['Propostas apresentadas',x=>nf(x.v.n_props)],['Votos sim',x=>nf(x.v.votos['Favorável'])],['Votos não',x=>nf(x.v.votos['Contrário'])],['Equipe do gabinete (2025 e 2026)',x=>rs(x.eq)],['Outros gastos (empenhado)',x=>rs(x.ou)],['Custo do mandato estimado',x=>rs(x.tot)]];
+ app.innerHTML=`<h1>Comparar vereadores</h1><p>Escolha dois vereadores. Os números vêm dos registros oficiais da Câmara. Não há nota: cada número mostra uma coisa diferente e nenhum deles mede sozinho a qualidade de um mandato.</p>
+<div class="cmpsel"><label>Vereador 1<select id="ca">${opt(a)}</select></label><label>Vereador 2<select id="cb">${opt(b)}</select></label></div>
+${A&&B?`<div class="cmp"><div class="cmph"></div><div class="cmph"><a href="#/v/${A.v.id}/presenca">${esc(A.v.nome)}</a></div><div class="cmph"><a href="#/v/${B.v.id}/presenca">${esc(B.v.nome)}</a></div>${lin.map(([t,f])=>`<div class="cmpl">${t}</div><div>${f(A)}</div><div>${f(B)}</div>`).join('')}</div><p class="peq">Gabinete maior custa mais. Equipe: soma do salário bruto de jan/2025 a ${G.competencias[G.competencias.length-1]}. Subsídio estimado em ${rs(SALARIO)} por mês. Fonte dos gastos: ${lk('Portal da Transparência da Câmara')}.</p>`:'<p class="peq">Escolha os dois vereadores para ver lado a lado.</p>'}`;
+ const go=()=>{const x=$('#ca').value,y=$('#cb').value;location.hash='#/comparar/'+(x||0)+'/'+(y||0)};$('#ca').onchange=go;$('#cb').onchange=go})}
 function gastosGeral(){app.innerHTML='<h1>Gastos da Câmara</h1><p>Carregando…</p>';get('data/gastos.json').then(G=>{
  const cs=G.competencias,ult=cs[cs.length-1],an=Object.entries(G.geral.anos);
  const TIPOS=[...new Set(G.vereadores.flatMap(g=>Object.values(g.cats).flatMap(a=>Object.keys(a))))];
@@ -204,6 +223,8 @@ function gastosGeral(){app.innerHTML='<h1>Gastos da Câmara</h1><p>Carregando…
 <h2>Ranking dos gabinetes</h2><p>Cada gasto está ligado ao vereador pelo centro de custo do portal. Escolha o período e o tipo de gasto. Toque no nome para ver cada compra.</p>
 <div id="ctl"></div><div id="rk"></div>
 <p class="peq">Equipe: salário bruto de quem está lotado no gabinete (2026: até ${ult}). Os outros tipos são valores empenhados, isto é, reservados para pagar. Estagiários não aparecem com lotação no portal e ficam fora. <b>Gabinete com mais gente custa mais: o ranking mede valor, não qualidade do mandato.</b></p>
+<h2>Gastos para olhar com atenção</h2><p>Classificações oficiais que costumam gerar dúvida, como alimentação, copa e cozinha, eventos e homenagens. <b>Estar aqui não significa irregularidade</b>: leia o motivo de cada compra. Valem para toda a Câmara, não só para os gabinetes.</p>
+<ul class="cards">${(G.atencao||[]).map(a=>`<li class="cd"><h3>${esc(a.sub.replace(/^[\d.]+ - /,''))}</h3><p class="sub">${nf(a.n)} empenhos em ${G.anos.join(' e ')}</p><dl><dt>Empenhado</dt><dd>${rs(a.empenhado)}</dd><dt>Pago</dt><dd>${rs(a.pago)}</dd></dl><details><summary><b>Maiores compras (${a.itens.length})</b></summary>${a.itens.map(i=>`<p class="hist"><b>${rs(i.emp)}</b> · ${fd(i.d)} · ${esc(i.doc)}<br>${esc(i.cred)} · ${esc(i.cc)}<br>${esc(i.h)}</p>`).join('')}</details></li>`).join('')}</ul>
 <h2>Publicidade e comunicação da Câmara</h2><p>Despesas que o portal classifica como "Serviços de Propaganda", "Serviços de Publicidade" ou "Serviços de Comunicação em Geral". Não são de um vereador, são da Câmara.</p>
 <ul class="cards">${pubs.map(({p,anos})=>`<li class="cd"><h3>${esc(p.credor)}</h3><p class="sub">${esc(p.subelemento.replace(/^[\d.]+ - /,''))} · ${p.contrato?'contrato '+esc(p.contrato):'sem contrato informado'}</p><dl>${anos.sort((a,b)=>a.ano-b.ano).map(x=>`<dt>${x.ano} empenhado</dt><dd>${rs(x.empenhado)}</dd><dt>${x.ano} pago</dt><dd>${rs(x.pago)}</dd>`).join('')}</dl></li>`).join('')}</ul>
 <p class="peq">Pago é o valor acumulado nos empenhos listados. Pode diferir do total pago no ano em "Despesas pagas por período", outra tela do mesmo portal. ${lk('Fonte: Despesas Detalhadas')}.</p>`;
