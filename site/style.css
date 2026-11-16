@@ -350,3 +350,8 @@ a.cracha:active{transform:scale(.98)}
  .aviso{background:#3b2a10;color:#ffd9a3}.grab{background:#48484a}.modal{background:rgba(0,0,0,.6)}
  .sheet3,.sug{background:#1c1c1e}.sheet3 input,.sheet3 .pick{background:#2c2c2e}
 }
+/* v14: contraste AA */
+.lst .vl i{color:#8e8e93}
+.tag{color:#003f85!important}
+.btn.cl,.btn.cl.share{color:#00479a!important}
+@media(prefers-color-scheme:dark){.tag{color:#9cc8ff!important}.btn.cl,.btn.cl.share{color:#9cc8ff!important}.lst .vl i{color:#8e8e93}}
