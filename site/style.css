@@ -294,3 +294,21 @@ a.cracha:active{transform:scale(.98)}
 .lista a{align-items:center}
 .lista .pos{min-width:2em}
 .lst .nm2,.lista .nm2{min-height:22px}
+
+/* v12: revisao geral (home, busca, presenca, resultados) */
+.tile.tp{display:grid;grid-template-columns:84px 1fr auto;align-items:center;gap:14px;min-height:76px}
+.tile.tp::after{float:none;align-self:center}
+.tile.tp b{font-size:1.9rem;font-variant-numeric:tabular-nums;text-align:left}
+.tile.tp .tx{display:grid;gap:2px;margin:0}
+.tile.tp strong{font-size:1rem;color:var(--tx);font-weight:700}
+.tile.tp em{font-style:normal;font-size:.85rem;color:var(--mu);line-height:1.35}
+.num,.recc{background:var(--bg-secondary,#f2f2f7)!important;border:0!important;border-radius:16px!important;box-shadow:none!important}
+.num{padding:12px 14px}
+.recc{padding:14px!important}
+.busca.sel3{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin:10px 0}
+.busca.sel3 select{width:100%;min-height:44px}
+.filtros label{font-size:.8rem}.filtros input,.filtros select{min-height:44px}
+.item{background:var(--bg-secondary,#f2f2f7);border:0!important;border-radius:14px;padding:12px 14px!important;margin:8px 0;line-height:1.45}
+.item .tag{margin-right:6px;vertical-align:1px}
+.item small{margin-top:6px;font-size:.82rem;line-height:1.5}
+.item a{color:var(--az,#0a58ca);text-underline-offset:2px}
