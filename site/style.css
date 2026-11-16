@@ -280,3 +280,17 @@ a.cracha:active{transform:scale(.98)}
 .lst .vl{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;display:flex;align-items:center;gap:6px}
 .lst .vl i{color:var(--system-gray2,#aeaeb2);font-style:normal;font-weight:400;font-size:1.3rem;line-height:1}
 .grp .peq{margin:8px 4px 0}
+
+/* v11: alinhamento das listas (divisoria por pseudo-elemento, padding uniforme) */
+.aviso{background:#fff4e5;color:#7a4100;border-radius:10px;padding:8px 10px;font-size:.88rem;margin:0 0 8px}
+.lst li,.lista li,.pick li{position:relative;margin-left:0!important}
+.lst li+li,.lista li+li,.pick li+li{border-top:0!important}
+.lst li+li::before,.lista li+li::before,.pick li+li::before{content:'';position:absolute;top:0;right:0;left:14px;border-top:.5px solid var(--separator,#c6c6c8)}
+.lst li.f+li::before,.pick li+li::before{left:70px}.lista li+li::before{left:110px}
+.lst a,.lista a{min-height:60px;padding:8px 14px!important;margin-left:0!important;width:auto!important}
+.pick button{margin-left:0!important;width:100%!important;padding:6px 14px}
+.lst .mid{gap:4px}
+.lst .vl,.lista .vl{min-width:4.2em;justify-content:flex-end}
+.lista a{align-items:center}
+.lista .pos{min-width:2em}
+.lst .nm2,.lista .nm2{min-height:22px}

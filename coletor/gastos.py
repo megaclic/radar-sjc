@@ -94,12 +94,12 @@ def main():
             sub = r.get("subelemento") or ""
             if re.search(r"Propaganda|Publicidade", sub) or "3.3.90.39.47" in sub:
                 k = (ano, r["credor"], sub[:12], r.get("contrato") or "")
-                p = pub.setdefault(k, {"ano": ano, "credor": r["credor"], "subelemento": sub, "contrato": r.get("contrato") or "", "objeto": (r.get("objeto_contrato") or "")[:240], "empenhado": 0.0, "pago": 0.0, "n": 0})
+                p = pub.setdefault(k, {"ano": ano, "credor": r["credor"], "subelemento": sub, "contrato": r.get("contrato") or "", "objeto": (r.get("objeto_contrato") or "")[:1200], "empenhado": 0.0, "pago": 0.0, "n": 0})
                 p["empenhado"] += dinheiro(r["vl_empenhado"]); p["pago"] += dinheiro(r["vl_pago"]); p["n"] += 1
             if ATENCAO.search(sub):
                 at = atencao.setdefault(sub, {"sub": sub, "n": 0, "empenhado": 0.0, "pago": 0.0, "itens": []})
                 at["n"] += 1; at["empenhado"] += dinheiro(r["vl_empenhado"]); at["pago"] += dinheiro(r["vl_pago"])
-                at["itens"].append({"a": ano, "d": (r.get("dt_doc_despesa") or "")[:10], "doc": r.get("doc_despesa"), "cred": r.get("credor"), "cc": re.sub(r"^[\d. ]+-\s*", "", cc), "h": (r.get("historico") or "")[:240], "emp": round(dinheiro(r["vl_empenhado"]), 2)})
+                at["itens"].append({"a": ano, "d": (r.get("dt_doc_despesa") or "")[:10], "doc": r.get("doc_despesa"), "cred": r.get("credor"), "cc": re.sub(r"^[\d. ]+-\s*", "", cc), "h": (r.get("historico") or "")[:1200], "emp": round(dinheiro(r["vl_empenhado"]), 2)})
             m = re.search(r"VEREADORA?\s+(.+)$", cc, re.I)
             if not m: continue
             nome = m.group(1).strip(); vid = por_chave.get(chave_nome(nome))
@@ -107,7 +107,7 @@ def main():
                 nao_map[nome] = nao_map.get(nome, 0) + 1; continue
             c = cat(sub); e = dinheiro(r["vl_empenhado"]); p_ = dinheiro(r["vl_pago"])
             a = V[vid]["cats"].setdefault(str(ano), {}).setdefault(c, [0.0, 0.0]); a[0] += e; a[1] += p_
-            V[vid]["itens"].append({"_id": r.get("id_doc_despesa"), "a": ano, "d": (r.get("dt_doc_despesa") or "")[:10], "doc": r.get("doc_despesa"), "cred": r.get("credor"), "cat": c, "sub": sub, "h": (r.get("historico") or "")[:300], "emp": round(e, 2), "pago": round(p_, 2)})
+            V[vid]["itens"].append({"_id": r.get("id_doc_despesa"), "a": ano, "d": (r.get("dt_doc_despesa") or "")[:10], "doc": r.get("doc_despesa"), "cred": r.get("credor"), "cat": c, "sub": sub, "h": (r.get("historico") or "")[:1200], "emp": round(e, 2), "pago": round(p_, 2)})
         time.sleep(1)
         det = api("/execucao/detalhamento_despesas/detalhamento_despesas", ano=ano, id_entidade=1, classificacao="", dias=0)["detalhamento_despesas"]
         geral["anos"][ano]["elementos"] = [{"nat": x["natureza"], "elem": x["elemento"], "previsto": x["vl_previsto"], "empenhado": x["vl_total_emp"], "pago": x["vl_total_pag"]} for x in det if x["vl_total_emp"] or x["vl_previsto"]]
@@ -117,9 +117,15 @@ def main():
             d = urllib.parse.quote(dt.date(i["a"], 12, 31).strftime("%a %b %d %Y") + " 00:00:00 GMT-0300 (Horário Padrão de Brasília)")
             try:
                 j = json.loads(req(f"{API}/execucao/despesas_detalhadas/liquidacoes?ano={d}&data_inicial=undefined&data_final=undefined&id_empenho={i['_id']}").decode("utf-8"))
-                i["nf"] = [{"nf": (l.get("ds_nf") or "").strip(), "liq": l.get("liquidacao"), "dt": (l.get("dt_movimento") or "")[:10]} for l in j.get("liquidacoes", [])]
+                i["nf"] = [{"nf": (l.get("ds_nf") or "").strip(), "liq": l.get("liquidacao"), "dt": (l.get("dt_movimento") or "")[:10], "v": l.get("vl_movimento"), "pg": l.get("vl_pago")} for l in j.get("liquidacoes", [])]
             except Exception:
                 i["nf"] = []
+            if i["emp"] == 0:
+                try:
+                    j = json.loads(req(f"{API}/execucao/despesas_detalhadas/empenhos?ano={d}&data_inicial=undefined&data_final=undefined&id_empenho={i['_id']}").decode("utf-8"))
+                    i["mov"] = [{"t": m.get("tp_movimento"), "v": m.get("vl_movimento")} for m in j.get("empenhos", [])]
+                except Exception:
+                    i["mov"] = []
             i.pop("_id", None); time.sleep(0.15)
     # folha dos gabinetes
     comps = competencias()
