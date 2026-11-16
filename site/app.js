@@ -9,9 +9,10 @@ const dec=s=>{try{return decodeURIComponent(s||'')}catch(e){return s||''}};
 const GCOR={melhoria:'az',cobranca:'am',homenagem:'rs',lei:'vd'};
 async function init(){try{R=await get('data/resumo.json');}catch(e){app.innerHTML='<h1>Não foi possível carregar os dados</h1><p>Se você abriu o arquivo direto da pasta (endereço começando com file://), o navegador bloqueia a leitura dos dados. Abra pelo servidor local: dê dois cliques em <b>servir.bat</b> (na pasta do projeto) e acesse <b>http://localhost:8000</b>. Online, no GitHub Pages, isso não acontece.</p>';return;}
  R.vereadores.forEach(v=>NOME[v.id]=v.nome);
- $('#hl').innerHTML=R.vereadores.map(v=>`<option value="${esc(v.nome)}">`).join('');
+ const sug=$('#hsug'),mostra=()=>{const q=$('#hq').value.trim();if(!q){sug.hidden=true;return}const L=R.vereadores.filter(v=>norm(v.nome).includes(norm(q))||norm(v.partido).includes(norm(q))).slice(0,6);sug.innerHTML=L.map(verLi).join('')||'<li class="peq" style="padding:10px 14px">Nenhum vereador encontrado.</li>';sug.hidden=false};
+ $('#hq').addEventListener('input',mostra);sug.addEventListener('click',e=>{const b=e.target.closest('[data-pick]');if(b){location.hash='#/v/'+b.dataset.pick+'/presenca';$('#hq').value='';sug.hidden=true;$('#hq').blur()}});document.addEventListener('click',e=>{if(!e.target.closest('#hs'))sug.hidden=true});$('#hq').addEventListener('keydown',e=>{if(e.key==='Escape'){sug.hidden=true}});
  $('#hs').addEventListener('submit',e=>{e.preventDefault();const q=norm($('#hq').value),v=R.vereadores.find(x=>norm(x.nome)===q)||R.vereadores.find(x=>norm(x.nome).includes(q));if(v&&q){location.hash='#/v/'+v.id+'/presenca';$('#hq').value='';$('#hq').blur()}});
- $('#hq').addEventListener('change',()=>{const q=norm($('#hq').value),v=R.vereadores.find(x=>norm(x.nome)===q);if(v){location.hash='#/v/'+v.id+'/presenca';$('#hq').value=''}});
+
  $('#atualizado').textContent='Dados atualizados até '+R.estado.camara_ultima_atualizacao+' (coletados em '+fd(R.estado.atualizado_em.slice(0,10))+'). Legislatura atual, desde 01/01/2025.';
  window.addEventListener('hashchange',rota);
  document.addEventListener('click',e=>{const c=e.target.closest('[data-go]');if(c&&!e.target.closest('a,button,input,select')){location.hash=c.dataset.go}
@@ -29,7 +30,7 @@ function rota(){const h=location.hash.replace(/^#\/?/,'').split('/');const TT={g
  switch(h[0]){case 'v':return vereador(+h[1],h[2]||'presenca',h[3]||'');
   case 'busca':return busca(dec(h[1]),dec(h[2]),dec(h[3]),dec(h[4]));
   case 'tema':return busca('',dec(h[1]),'','');case 'grupo':return busca('','',dec(h[1]),'');
-  case 'gastos':return gastosGeral();case 'comparar':return comparar(+h[1]||0,+h[2]||0);case 'sobre':return sobre();default:return home();}}
+  case 'gastos':return gastosGeral();case 'comparar':return comparar(+h[1]||0,+h[2]||0);case 'sobre':sobre();return decoSobre();default:return home();}}
 const pres=v=>{const p=v.presenca,pr=p['Presente']||0,fj=p['Falta Justificada']||0,f=p['Falta']||0,tot=pr+fj+f;return {pr,fj,f,tot,pct:tot?Math.round(pr*100/tot):0}};
 function share(t,u){return `<button class="btn cl share" onclick="(navigator.share?navigator.share({title:'${esc(t)}',url:location.href}):navigator.clipboard.writeText(location.href).then(()=>this.textContent='Link copiado'))">Compartilhar</button>`}
 /* ---------- INÍCIO ---------- */
@@ -110,27 +111,40 @@ function lista(v,d,g,q='',ano='',qtd=PAGE){const all=d.proposicoes.filter(r=>r[5
  $('#q').oninput=e=>{clearTimeout(t);const val=e.target.value;t=setTimeout(()=>{re(val,$('#ano').value);const i=$('#q');i.focus();i.setSelectionRange(val.length,val.length)},250)};$('#ano').onchange=e=>re($('#q').value,e.target.value);
  const b=document.querySelector('#lista [data-mais]');if(b)b.onclick=()=>re(q,ano,qtd+PAGE);}
 const itemProp=r=>`<div class="item"><span class="tag">${esc(r[1])} ${esc(r[2])}/${esc(r[3])}</span>${esc(r[6]||'(texto não exibido)')}<small>${fd(r[4])} · ${esc(r[7])} · <a href="${esc(r[8])}" target="_blank" rel="noopener">documento oficial</a></small></div>`;
+const VB={'Favorável':'fav','Contrário':'con','Abstenção':'abs','Presidente':'pre'};
 function pVot(v,d,sub){const t=v.votos;
  $('#aba').innerHTML=`<p>Votações em que a Câmara registra o voto de cada vereador. Votações secretas (${nf(R.votacoes_secretas)}) não têm voto individual. ${nf(R.votacoes_em_verificacao)} votações ficam de fora porque o documento oficial se contradiz, e estão em verificação. O presidente da sessão não vota, salvo empate, e por isso aparece como "Presidente".</p>
 <div class="nums">${['Favorável','Contrário','Abstenção','Presidente'].map(k=>`<div class="num"><b>${nf(t[k])}</b>${k}</div>`).join('')}</div>
-<div class="busca" style="margin-top:12px"><select id="st"><option value="">Todos os votos</option><option value="nao-sim" ${sub==='nao-sim'?'selected':''}>Só quando não votou sim</option><option>Favorável</option><option>Contrário</option><option>Abstenção</option></select><input type="search" id="vq" placeholder="Buscar no assunto"></div><div id="vl"></div>`;
+<div class="busca sel3" style="margin-top:12px"><select id="st" aria-label="Filtrar por voto"><option value="">Todos os votos</option><option value="nao-sim" ${sub==='nao-sim'?'selected':''}>Só quando não votou sim</option><option>Favorável</option><option>Contrário</option><option>Abstenção</option></select><input type="search" id="vq" placeholder="Buscar no assunto" aria-label="Buscar no assunto"></div><div id="vl"></div>`;
  let qtd=PAGE;const draw=()=>{const st=$('#st').value,q=$('#vq').value;const a=d.votos.filter(r=>(!st||(st==='nao-sim'?(r[3]==='Contrário'||r[3]==='Abstenção'):r[3]===st))&&(!q||norm(r[2]).includes(norm(q))));
-  $('#vl').innerHTML=`<p class="peq">${nf(a.length)} votos</p>`+a.slice(0,qtd).map(r=>`<div class="item"><span class="tag ${r[3]==='Favorável'?'':'t2'}">${esc(r[3])}</span>${esc(r[2])}<small>Sessão de ${fd(r[1])} · resultado: ${esc(r[4])} · <a href="${esc(r[5])}" target="_blank" rel="noopener">extrato oficial</a></small></div>`).join('')+mais(a.length,qtd);
+  $('#vl').innerHTML=`<p class="peq">${nf(a.length)} votos</p>`+a.slice(0,qtd).map(r=>`<article class="item vt2"><div class="vt2h"><span class="vb ${VB[r[3]]||'pre'}">${esc(r[3])}</span><span class="vr">${esc(r[4])}</span></div><p class="vtx">${esc(r[2])}</p><small>Sessão de ${fd(r[1])} · <a href="${esc(r[5])}" target="_blank" rel="noopener">extrato oficial<span class="sr"> (abre em nova aba)</span></a></small></article>`).join('')+mais(a.length,qtd);
   const b=document.querySelector('#vl [data-mais]');if(b)b.onclick=()=>{qtd+=PAGE;draw()};};
  let tt;$('#st').onchange=()=>{qtd=PAGE;draw()};$('#vq').oninput=()=>{clearTimeout(tt);tt=setTimeout(()=>{qtd=PAGE;draw()},250)};draw();}
 /* ---------- BUSCA / TEMA / GRUPO ---------- */
+
+/* ---------- SELETOR DE VEREADOR COM FOTO ---------- */
+const verLi=v=>`<li><button type="button" data-pick="${v.id}">${vfoto(v)}<span class="mid"><b>${esc(v.nome)}</b><small>${esc(v.partido)}</small></span></button></li>`;
+function abrirPicker(titulo,cb){const ant=document.activeElement;document.querySelector('.modal')?.remove();
+ const m=document.createElement('div');m.className='modal';
+ m.innerHTML=`<div class="sheet3" role="dialog" aria-modal="true" aria-label="${esc(titulo)}"><span class="grab" aria-hidden="true"></span><div class="sh"><b>${esc(titulo)}</b><button type="button" class="fechar">Cancelar</button></div><input type="search" id="mq" placeholder="Buscar por nome ou partido" aria-label="Buscar vereador" autocomplete="off"><ul class="pick" id="ml"></ul></div>`;
+ document.body.appendChild(m);document.body.classList.add('trava');
+ const fecha=()=>{m.remove();document.body.classList.remove('trava');ant&&ant.focus&&ant.focus()};
+ const lista=q=>{$('#ml').innerHTML=(q?'':'<li><button type="button" data-pick="" class="todos"><span class="mid"><b>Todos os vereadores</b></span></button></li>')+(R.vereadores.filter(v=>!q||norm(v.nome).includes(norm(q))||norm(v.partido).includes(norm(q))).map(verLi).join('')||'<li class="peq" style="padding:12px 14px">Nenhum vereador encontrado.</li>')};
+ lista('');$('#mq').focus();$('#mq').oninput=e=>lista(e.target.value);
+ m.onclick=e=>{if(e.target===m||e.target.closest('.fechar'))return fecha();const b=e.target.closest('[data-pick]');if(b){fecha();cb(b.dataset.pick)}};
+ m.onkeydown=e=>{if(e.key==='Escape')fecha()}}
 let BS=null;
 async function busca(q,tema,grupo,ver){
  const titulo=()=>BS.q?'Pedidos sobre "'+BS.q+'"':BS.grupo?R.grupos[BS.grupo]:BS.tema?BS.tema:'O que pediram pelo seu bairro?';
  BS={q,tema,grupo,ver,qtd:PAGE};
  app.innerHTML=`<h1 id="bt"></h1><p class="peq">Procura nas propostas dos vereadores (pedidos, cobranças, projetos, moções). Casos individuais ficam de fora, por privacidade.</p>
 <form class="busca" id="fb"><input type="search" id="bq" placeholder="Rua, bairro ou assunto" value="${esc(q)}" autocomplete="off"><button class="btn">Buscar</button></form>
-<div class="busca sel3"><select id="fg"><option value="">Todos os tipos</option>${Object.keys(R.grupos).filter(k=>k!=='saude_individual'&&k!=='tramite').map(k=>`<option value="${k}" ${k===grupo?'selected':''}>${esc(R.grupos[k])}</option>`).join('')}</select><select id="ft"><option value="">Todos os temas</option>${Object.keys(R.agreg.temas).map(k=>`<option ${k===tema?'selected':''}>${esc(k)}</option>`).join('')}</select><select id="fv"><option value="">Todos os vereadores</option>${R.vereadores.map(v=>`<option value="${v.id}" ${String(v.id)===String(ver)?'selected':''}>${esc(v.nome)}</option>`).join('')}</select></div>
+<div class="busca sel3"><select id="fg"><option value="">Todos os tipos</option>${Object.keys(R.grupos).filter(k=>k!=='saude_individual'&&k!=='tramite').map(k=>`<option value="${k}" ${k===grupo?'selected':''}>${esc(R.grupos[k])}</option>`).join('')}</select><select id="ft"><option value="">Todos os temas</option>${Object.keys(R.agreg.temas).map(k=>`<option ${k===tema?'selected':''}>${esc(k)}</option>`).join('')}</select><button type="button" id="fvb" class="selb" aria-haspopup="dialog"></button></div>
 <div id="res"><p>Carregando as propostas…</p></div>`;
  const B=await get('data/busca.json');
  const url=()=>history.replaceState(null,'','#/busca/'+[BS.q,BS.tema,BS.grupo,BS.ver].map(encodeURIComponent).join('/'));
- const ler=()=>{BS.q=$('#bq').value.trim();BS.grupo=$('#fg').value;BS.tema=$('#ft').value;BS.ver=$('#fv').value;BS.qtd=PAGE;url();ULT='busca/';desenha()};
- let t;$('#bq').oninput=()=>{clearTimeout(t);t=setTimeout(ler,300)};$('#fb').onsubmit=e=>{e.preventDefault();ler()};$('#fg').onchange=ler;$('#ft').onchange=ler;$('#fv').onchange=ler;
+ const ler=()=>{BS.q=$('#bq').value.trim();BS.grupo=$('#fg').value;BS.tema=$('#ft').value;BS.qtd=PAGE;url();ULT='busca/';desenha()};
+ let t;$('#bq').oninput=()=>{clearTimeout(t);t=setTimeout(ler,300)};$('#fb').onsubmit=e=>{e.preventDefault();ler()};$('#fg').onchange=ler;$('#ft').onchange=ler;const pintaV=()=>{const v=R.vereadores.find(x=>String(x.id)===String(BS.ver));$('#fvb').innerHTML=v?`${vfoto(v)}<span><b>${esc(v.nome)}</b><small>${esc(v.partido)}</small></span><i aria-hidden="true">⌄</i>`:'<span><b>Todos os vereadores</b></span><i aria-hidden="true">⌄</i>'};pintaV();$('#fvb').onclick=()=>abrirPicker('Escolher vereador',id=>{BS.ver=id;pintaV();ler()});
  function desenha(){const {q,tema,grupo,ver}=BS;$('#bt').textContent=titulo();const ts=norm(q).split(/\s+/).filter(Boolean);
   const a=B.filter(r=>(!grupo||r[3]===grupo)&&(!tema||r[7]===tema)&&(!ver||r[6].includes(+ver))&&(!ts.length||ts.every(x=>norm(r[4]).includes(x)))).sort((x,y)=>y[2].localeCompare(x[2]));
   if(!a.length){$('#res').innerHTML='<p>Nada encontrado. Tente menos palavras ou outra grafia.</p>';return}
@@ -142,6 +156,7 @@ ${a.slice(0,BS.qtd).map(r=>`<div class="item"><span class="tag">${esc(r[1])}</sp
   const b=document.querySelector('#res [data-mais]');if(b)b.onclick=()=>{BS.qtd+=PAGE;desenha()};}
  desenha();}
 /* ---------- COMO FUNCIONA ---------- */
+function decoSobre(){const hs=[...app.querySelectorAll('.sobre h2')];hs.forEach((h,i)=>{h.id='sb'+i});const nav=document.createElement('nav');nav.className='toc';nav.setAttribute('aria-label','Nesta página');nav.innerHTML=hs.map((h,i)=>`<button type="button" class="chip" data-scroll="sb${i}">${esc(h.textContent)}</button>`).join('');const h1=app.querySelector('.sobre h1');h1&&h1.after(nav)}
 function sobre(){const G=R.grupos;app.innerHTML=`<div class="sobre"><h1>Como funciona</h1>
 <h2>De onde vêm os dados</h2><p>Só de sistemas oficiais da Câmara. Do <a href="${CAM}/" target="_blank" rel="noopener">Câmara Sem Papel</a>: lista de vereadores, listas de presença de cada sessão, propostas apresentadas e extratos da votação eletrônica. Do <a href="https://portal.camarasjc.sp.gov.br/portal-transparencia/home" target="_blank" rel="noopener">Portal da Transparência da Câmara</a>: gastos, folha dos gabinetes, contratos e publicidade. Cada número tem um link para o documento ou para o portal.</p>
 <h2>O que contamos</h2><ul><li><b>Presença:</b> lista oficial de cada sessão. Sessões sem lista registrada não entram (não é falta). Conferimos nossa contagem com o total que a própria Câmara informa.</li>
