@@ -260,3 +260,5 @@ a.cracha:active{transform:scale(.98)}
 .cmp .cmph small{color:var(--mu);font-weight:600}
 .lista .mid small{display:block}
 @media(min-width:640px){.slots{max-width:520px}}
+
+.lista .nm2{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px}.lista .pill{background:var(--bg,#fff);border:.5px solid var(--separator,#c6c6c8);font-size:.72rem;line-height:1.5;padding:1px 8px}
