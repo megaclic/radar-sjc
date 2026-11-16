@@ -355,3 +355,12 @@ a.cracha:active{transform:scale(.98)}
 .tag{color:#003f85!important}
 .btn.cl,.btn.cl.share{color:#00479a!important}
 @media(prefers-color-scheme:dark){.tag{color:#9cc8ff!important}.btn.cl,.btn.cl.share{color:#9cc8ff!important}.lst .vl i{color:#8e8e93}}
+/* v15: modo escuro, correcoes medidas */
+@media(prefers-color-scheme:dark){
+ .vcab{background:#2c2c2e!important}
+ .vcab h1,.vcab .part2{color:#fff}
+ .btn.cl,.btn.cl.share{background:#1f3a5f!important}
+ .slot2 small,.selb small.az{color:#7ab8ff}
+ .sim{color:rgba(235,235,245,.8)!important}
+ .cr .peq span[style*="dc2626"]{color:#ff7b7b!important}
+}
