@@ -262,3 +262,21 @@ a.cracha:active{transform:scale(.98)}
 @media(min-width:640px){.slots{max-width:520px}}
 
 .lista .nm2{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px}.lista .pill{background:var(--bg,#fff);border:.5px solid var(--separator,#c6c6c8);font-size:.72rem;line-height:1.5;padding:1px 8px}
+
+/* v10: tres listas da home, grupo estilo iOS */
+.tres{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:20px;margin:24px 0}
+.grp h3{margin:0 0 8px 4px}
+.lst{list-style:none;margin:0;padding:0;background:var(--bg-secondary,#f2f2f7);border-radius:16px;overflow:hidden}
+.lst li+li{border-top:.5px solid var(--separator,#c6c6c8);margin-left:16px}
+.lst a{display:flex;align-items:center;gap:12px;min-height:56px;padding:8px 14px 8px 0;color:var(--tx);text-decoration:none}
+.lst li:first-child a{padding-left:14px}.lst li+li a{padding-left:0}
+.lst li:first-child a:has(img){padding-left:14px}
+.lst a:active{background:rgba(0,0,0,.06)}
+.lst img{width:44px;height:44px;border-radius:50%;object-fit:cover;object-position:top;background:#e5e5ea;flex:none}
+.lst .mid{display:grid;gap:3px;flex:1;min-width:0}
+.lst .nm2{display:flex;flex-wrap:wrap;align-items:center;gap:2px 8px}.lst .nm2 b{font-weight:600;overflow-wrap:anywhere}
+.lst .pill{background:var(--bg,#fff);border:.5px solid var(--separator,#c6c6c8);font-size:.72rem;line-height:1.5;padding:1px 8px}
+.lst .bar{margin:0}
+.lst .vl{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;display:flex;align-items:center;gap:6px}
+.lst .vl i{color:var(--system-gray2,#aeaeb2);font-style:normal;font-weight:400;font-size:1.3rem;line-height:1}
+.grp .peq{margin:8px 4px 0}
