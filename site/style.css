@@ -364,3 +364,7 @@ a.cracha:active{transform:scale(.98)}
  .sim{color:rgba(235,235,245,.8)!important}
  .cr .peq span[style*="dc2626"]{color:#ff7b7b!important}
 }
+/* v16: abas do perfil em uma linha */
+.abas{display:grid!important;grid-template-columns:repeat(4,1fr);gap:6px}
+.abas a{display:flex;align-items:center;justify-content:center;min-height:44px;padding:0 4px!important;font-size:.88rem;text-align:center;white-space:nowrap}
+@media(min-width:640px){.abas a{font-size:1rem}}
